@@ -5,16 +5,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
+using Serilog;
+
 namespace ProgrammerAL.CodeUpdater.Updaters;
 
-public class CsProjUpdater
+public class CsProjUpdater(ILogger Logger)
 {
     public const string TargetFrameworkValue = "net8.0";
     public const string LangVersionValue = "latest";
 
     public void UpdateCsProjPropertyValues(string csProjFilePath)
     {
-        Console.ForegroundColor = ConsoleColor.Magenta;
         var csProjXmlDoc = XDocument.Load(csProjFilePath, LoadOptions.PreserveWhitespace);
 
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
@@ -36,22 +37,20 @@ public class CsProjUpdater
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
         File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), Encoding.UTF8);
-
-        Console.ForegroundColor = ConsoleColor.White;
     }
 
-    private static void UpdateTargetFramework(XElement childElm)
+    private void UpdateTargetFramework(XElement childElm)
     {
         var targetFrameworkElm = childElm.Element("TargetFramework");
         if (!string.IsNullOrEmpty(targetFrameworkElm?.Value)
             && !string.Equals(targetFrameworkElm.Value, TargetFrameworkValue))
         {
-            Console.WriteLine($"\t Updating target framework from '{targetFrameworkElm.Value}' to '{TargetFrameworkValue}'");
+            Logger.Information($"Updating target framework from '{targetFrameworkElm.Value}' to '{TargetFrameworkValue}'");
             targetFrameworkElm.Value = TargetFrameworkValue;
         }
     }
 
-    private static LangVersionUpdateType UpdateLangVersion(XElement childElm)
+    private LangVersionUpdateType UpdateLangVersion(XElement childElm)
     {
         var langVersionElm = childElm.Element("LangVersion");
         if (langVersionElm is object)
@@ -61,7 +60,7 @@ public class CsProjUpdater
                 return LangVersionUpdateType.AlreadyHasCorrectValue;
             }
 
-            Console.WriteLine($"\t Updating language version from '{langVersionElm.Value}' to '{LangVersionValue}'");
+            Logger.Information($"Updating language version from '{langVersionElm.Value}' to '{LangVersionValue}'");
             langVersionElm.Value = LangVersionValue;
             return LangVersionUpdateType.Updated;
         }
@@ -69,18 +68,18 @@ public class CsProjUpdater
         return LangVersionUpdateType.NotFound;
     }
 
-    private static void AddLangVersion(string LangVersionValue, XDocument csProjXmlDoc)
+    private void AddLangVersion(string LangVersionValue, XDocument csProjXmlDoc)
     {
         var existingPropertyGroup = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
         if (existingPropertyGroup is object)
         {
-            Console.WriteLine("\t Adding LangVersion element to first PropertyGroup element");
+            Logger.Information("Adding LangVersion element to first PropertyGroup element");
             var newElement = new XElement("LangVersion", LangVersionValue);
             existingPropertyGroup.Add(newElement);
         }
         else
         {
-            Console.WriteLine("\t Adding LangVersion element to a new PropertyGroup element");
+            Logger.Information("Adding LangVersion element to a new PropertyGroup element");
             var newPropertyGroup = new XElement("PropertyGroup",
                                     new XElement("LangVersion", LangVersionValue));
             csProjXmlDoc.Add(newPropertyGroup);

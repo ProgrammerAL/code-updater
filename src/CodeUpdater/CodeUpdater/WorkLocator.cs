@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Serilog;
+
 namespace ProgrammerAL.CodeUpdater;
-public class WorkLocator
+public class WorkLocator(ILogger Logger)
 {
     public ImmutableArray<string> DetermineSkipPaths()
     {
@@ -41,7 +43,7 @@ public class WorkLocator
             var skipPath = skipPaths.FirstOrDefault(x => csProjFilePath.Contains(x, StringComparison.OrdinalIgnoreCase));
             if (skipPath is object)
             {
-                Console.WriteLine($"Skipping '{csProjFilePath}' file because it's path should be ignored by rule: {skipPath}");
+                Logger.Information($"Skipping '{csProjFilePath}' file because it's path should be ignored by rule: {skipPath}");
             }
             else
             {
@@ -62,7 +64,7 @@ public class WorkLocator
             var skipPath = skipPaths.FirstOrDefault(x => packageJsonPath.Contains(x, StringComparison.OrdinalIgnoreCase));
             if (skipPath is object)
             {
-                Console.WriteLine($"Skipping '{packageJsonPath}' file because it's path should be ignored by rule: {skipPath}");
+                Logger.Information($"Skipping '{packageJsonPath}' file because it's path should be ignored by rule: {skipPath}");
             }
             else
             {

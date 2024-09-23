@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Serilog;
+
 namespace ProgrammerAL.CodeUpdater.Updaters;
-public class NugetUpdater
+public class NugetUpdater(ILogger Logger)
 {
     public void UpdateNugetPackages(string csProjFilePath)
     {
@@ -42,15 +44,11 @@ public class NugetUpdater
         foreach (var package in topLevelPackages)
         {
             var packageId = package.Id;
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-            Console.WriteLine($"\t Updating package: {packageId}");
+            Logger.Information($"\t Updating package: {packageId}");
 
-            Console.ForegroundColor = ConsoleColor.DarkGray;
             var addProcess = Process.Start("dotnet", $"add \"{csProjFilePath}\" package {packageId}");
             addProcess.WaitForExit();
         }
-
-        Console.ForegroundColor = ConsoleColor.White;
     }
 
     public class NugetPackagesDto
