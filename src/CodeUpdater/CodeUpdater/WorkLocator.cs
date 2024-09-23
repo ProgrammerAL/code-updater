@@ -10,7 +10,7 @@ using Serilog;
 namespace ProgrammerAL.CodeUpdater;
 public class WorkLocator(ILogger Logger)
 {
-    public ImmutableArray<string> DetermineSkipPaths()
+    public ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
     {
         var skipPaths = new[]
         {
@@ -25,10 +25,13 @@ public class WorkLocator(ILogger Logger)
 
             //Ignore packages inside node_modules
             @"/node_modules/"
-        }.ToImmutableArray();
+        }
+        .ToImmutableArray();
 
         //Include the same paths, but with backslashes so this is cross-platform
         skipPaths = skipPaths.AddRange(skipPaths.Select(x => x.Replace("/", "\\")));
+
+        skipPaths = skipPaths.AddRange(additionalSkipPaths);
 
         return skipPaths;
     }

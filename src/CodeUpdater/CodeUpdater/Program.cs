@@ -31,7 +31,7 @@ static async ValueTask RunAsync(CommandOptions options)
     var csProjUpdater = new CsProjUpdater(logger);
     var compileRunner = new CompileRunner(logger);
 
-    var skipPaths = workLocator.DetermineSkipPaths();
+    var skipPaths = workLocator.DetermineSkipPaths(options.IgnorePatterns);
 
     var canRun = await validator.VerifyCanRunAsync(options.RootDirectory, skipPaths);
 
