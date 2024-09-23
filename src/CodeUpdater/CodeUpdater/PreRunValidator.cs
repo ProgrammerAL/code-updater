@@ -10,20 +10,20 @@ using System.Threading.Tasks;
 using Serilog;
 
 namespace ProgrammerAL.CodeUpdater;
-public class PreRunValidator(WorkLocator WorkLocator, ILogger Logger)
+public class PreRunValidator(ILogger Logger)
 {
-    public async ValueTask<bool> VerifyCanRunAsync(string rootDirectory, ImmutableArray<string> skipPaths)
+    public async ValueTask<bool> VerifyCanRunAsync(UpdateWork updateWork)
     {
         var canRun = true;
-        canRun &= await VerifyCanUpdateNpmPackagesAsync(rootDirectory, skipPaths);
+        canRun &= await VerifyCanUpdateNpmPackagesAsync(updateWork);
 
         return canRun;
     }
 
-    private async ValueTask<bool> VerifyCanUpdateNpmPackagesAsync(string rootDirectory, ImmutableArray<string> skipPaths)
+    private async ValueTask<bool> VerifyCanUpdateNpmPackagesAsync(UpdateWork updateWork)
     {
         //If no npm directories are found, then no npm packages to update, so this is valid
-        if (!WorkLocator.FindNpmDirectories(rootDirectory, skipPaths).Any())
+        if (!updateWork.NpmDirectories.Any())
         {
             return true;
         }

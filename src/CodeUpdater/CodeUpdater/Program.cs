@@ -26,21 +26,23 @@ static async ValueTask RunAsync(CommandOptions options)
     var logger = Log.Logger;
 
     var workLocator = new WorkLocator(logger);
-    var validator = new PreRunValidator(workLocator, logger);
+    var validator = new PreRunValidator(logger);
     var nugetUpdater = new NugetUpdater(logger);
     var csProjUpdater = new CsProjUpdater(logger);
     var compileRunner = new CompileRunner(logger);
 
     var skipPaths = workLocator.DetermineSkipPaths(options.IgnorePatterns);
 
-    var canRun = await validator.VerifyCanRunAsync(options.RootDirectory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(options.RootDirectory, skipPaths);
+
+    var canRun = await validator.VerifyCanRunAsync(updateWork);
 
     if (!canRun)
     {
         return;
     }
 
-    var csProjFilesPaths = workLocator.FindCsProjFilesAsync(options.RootDirectory, skipPaths);
+    var csProjFilesPaths = workLocator.FindCsProjFiles(options.RootDirectory, skipPaths);
 
     foreach (var csProjFilePath in csProjFilesPaths)
     {

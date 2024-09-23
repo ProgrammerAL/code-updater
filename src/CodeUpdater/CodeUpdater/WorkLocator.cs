@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using Serilog;
 
 namespace ProgrammerAL.CodeUpdater;
+
+public record UpdateWork(ImmutableArray<string> CsProjectFiles, ImmutableArray<string> NpmDirectories);
+
 public class WorkLocator(ILogger Logger)
 {
     public ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
@@ -36,7 +39,15 @@ public class WorkLocator(ILogger Logger)
         return skipPaths;
     }
 
-    public ImmutableArray<string> FindCsProjFilesAsync(string rootDirectory, ImmutableArray<string> skipPaths)
+    public UpdateWork DetermineUpdateWork(string rootDirectory, ImmutableArray<string> skipPaths)
+    { 
+        var csProjFiles = FindCsProjFiles(rootDirectory, skipPaths);
+        var npmDirectories = FindNpmDirectories(rootDirectory, skipPaths);
+
+        return new UpdateWork(csProjFiles, npmDirectories);
+    }
+
+    public ImmutableArray<string> FindCsProjFiles(string rootDirectory, ImmutableArray<string> skipPaths)
     {
         var allCsProjFilesPaths = Directory.GetFiles(rootDirectory, "*.csproj", SearchOption.AllDirectories);
         var validCsProjFilesPaths = new List<string>();
