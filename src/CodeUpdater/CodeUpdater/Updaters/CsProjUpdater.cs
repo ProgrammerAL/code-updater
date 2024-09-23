@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.CodeUpdater.Updaters;
 
 public class CsProjUpdater
 {
@@ -35,7 +35,7 @@ public class CsProjUpdater
 
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
-        File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), System.Text.Encoding.UTF8);
+        File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), Encoding.UTF8);
 
         Console.ForegroundColor = ConsoleColor.White;
     }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.CodeUpdater.Updaters;
 public class NugetUpdater
 {
     public void UpdateNugetPackages(string csProjFilePath)
