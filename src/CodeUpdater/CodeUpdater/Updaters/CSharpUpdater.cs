@@ -39,7 +39,7 @@ public class CSharpUpdater
 
             builder.Add(new CSharpUpdateResult(
                 csProjFilePath,
-                NugetUpdates: nugetUpdates.Updates,
+                NugetUpdates: nugetUpdates,
                 LangVersionUpdate: csProjUpdates.LangVersionUpdate,
                 TargetFrameworkUpdate: csProjUpdates.TargetFrameworkUpdate));
         }
