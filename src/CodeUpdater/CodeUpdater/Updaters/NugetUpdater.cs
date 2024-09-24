@@ -21,11 +21,14 @@ public class NugetUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
         {
             RedirectStandardOutput = true,
         };
-        var outdatedPackagesProcess = Process.Start(processStartArgs);
-        outdatedPackagesProcess!.WaitForExit();
 
-        var packagesJsonString = outdatedPackagesProcess.StandardOutput.ReadToEnd();
-        var outdatedPackagesDto = System.Text.Json.JsonSerializer.Deserialize<NugetPackagesDto>(packagesJsonString, new System.Text.Json.JsonSerializerOptions
+        var nugetUpdateOutput = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", $"list {csProjFilePath} package --format json");
+        if (!nugetUpdateOutput.CompletedSuccessfully)
+        {
+            return new NugetUpdateResults(RetrievedPackageListSuccessfully: false, ImmutableArray<NugetUpdateResult>.Empty);
+        }
+
+        var outdatedPackagesDto = System.Text.Json.JsonSerializer.Deserialize<NugetPackagesDto>(nugetUpdateOutput.Output, new System.Text.Json.JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         });
@@ -52,11 +55,11 @@ public class NugetUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
             var packageId = package.Id;
             Logger.Information($"\t Updating package: {packageId}");
 
-            _ = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", $"add \"{csProjFilePath}\" package {packageId}");
-            builder.Add(new NugetUpdateResult(csProjFilePath, packageId));
+            var updateResult = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", $"add \"{csProjFilePath}\" package {packageId}");
+            builder.Add(new NugetUpdateResult(csProjFilePath, packageId, UpdatedSuccessfully: updateResult.CompletedSuccessfully));
         }
 
-        return new NugetUpdateResults(builder.ToImmutable());
+        return new NugetUpdateResults(RetrievedPackageListSuccessfully: true, builder.ToImmutable());
     }
 
     public class NugetPackagesDto

@@ -19,6 +19,8 @@ public class NpmUpdater(IRunProcessHelper RunProcessHelper)
         foreach (var projectPath in updateWork.NpmDirectories)
         {
             RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm-check-updates --upgrade");
+            RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm install --legacy-peer-deps");
+            RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm audit fix --force");
         }
 
         return new NpmUpdates(updateWork.NpmDirectories);

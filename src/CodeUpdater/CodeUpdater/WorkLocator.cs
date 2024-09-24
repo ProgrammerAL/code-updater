@@ -23,9 +23,6 @@ public class WorkLocator(ILogger Logger)
             @"/bin/Debug/",
             @"/bin/Release/",
 
-            //Ignore this code
-            @"/CodeUpdater/",
-
             //Ignore packages inside node_modules
             @"/node_modules/"
         }

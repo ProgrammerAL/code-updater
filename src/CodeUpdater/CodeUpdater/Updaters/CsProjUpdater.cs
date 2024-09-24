@@ -38,7 +38,7 @@ public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
         if (langUpdateValues.All(x => x == LangVersionUpdateType.NotFound))
         {
             langVersionUpdateType = LangVersionUpdateType.AddedElement;
-            AddLangVersionElement(CommandOptions.LangVersionValue, csProjXmlDoc);
+            AddLangVersionElement(CommandOptions.DotNetLangVersion, csProjXmlDoc);
         }
         else
         {
@@ -60,13 +60,13 @@ public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
             return TargetFrameworkUpdateType.NotFound;
         }
 
-        if (string.Equals(targetFrameworkElm.Value, CommandOptions.DotNetTargetFrameworkValue))
+        if (string.Equals(targetFrameworkElm.Value, CommandOptions.DotNetTargetFramework))
         {
             return TargetFrameworkUpdateType.AlreadyHasCorrectValue;
         }
 
-        Logger.Information($"Updating target framework from '{targetFrameworkElm.Value}' to '{CommandOptions.DotNetTargetFrameworkValue}'");
-        targetFrameworkElm.Value = CommandOptions.DotNetTargetFrameworkValue;
+        Logger.Information($"Updating target framework from '{targetFrameworkElm.Value}' to '{CommandOptions.DotNetTargetFramework}'");
+        targetFrameworkElm.Value = CommandOptions.DotNetTargetFramework;
 
         return TargetFrameworkUpdateType.Updated;
     }
@@ -79,13 +79,13 @@ public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
             return LangVersionUpdateType.NotFound;
         }
 
-        if (string.Equals(langVersionElm.Value, CommandOptions.LangVersionValue))
+        if (string.Equals(langVersionElm.Value, CommandOptions.DotNetLangVersion))
         {
             return LangVersionUpdateType.AlreadyHasCorrectValue;
         }
 
-        Logger.Information($"Updating language version from '{langVersionElm.Value}' to '{CommandOptions.LangVersionValue}'");
-        langVersionElm.Value = CommandOptions.LangVersionValue;
+        Logger.Information($"Updating language version from '{langVersionElm.Value}' to '{CommandOptions.DotNetLangVersion}'");
+        langVersionElm.Value = CommandOptions.DotNetLangVersion;
         return LangVersionUpdateType.Updated;
     }
 

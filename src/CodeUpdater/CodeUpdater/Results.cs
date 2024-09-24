@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace ProgrammerAL.CodeUpdater;
 
-public record CSharpUpdateResult(string CsprojFile, ImmutableArray<NugetUpdateResult> NugetUpdates, LangVersionUpdateType LangVersionUpdate, TargetFrameworkUpdateType TargetFrameworkUpdate);
+public record CSharpUpdateResult(string CsprojFile, NugetUpdateResults NugetUpdates, LangVersionUpdateType LangVersionUpdate, TargetFrameworkUpdateType TargetFrameworkUpdate);
 
-public record NugetUpdateResults(ImmutableArray<NugetUpdateResult> Updates);
-public record NugetUpdateResult(string CsProjFile, string PackageId);
+public record NugetUpdateResults(bool RetrievedPackageListSuccessfully, ImmutableArray<NugetUpdateResult> Updates);
+public record NugetUpdateResult(string CsProjFile, string PackageId, bool UpdatedSuccessfully);
 
 public record CsProjUpdateResult(string CsProjFile, LangVersionUpdateType LangVersionUpdate, TargetFrameworkUpdateType TargetFrameworkUpdate);
 

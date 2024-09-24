@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 
 using CommandLine;
@@ -33,7 +34,7 @@ static async ValueTask RunAsync(CommandOptions options)
 
     var skipPaths = workLocator.DetermineSkipPaths(options.IgnorePatterns);
 
-    var updateWork = workLocator.DetermineUpdateWork(options.RootDirectory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(options.Directory, skipPaths);
 
     var canRun = await validator.VerifyCanRunAsync(updateWork);
 
@@ -64,16 +65,39 @@ static void OutputSummary(UpdateWork updateWork, ImmutableArray<CSharpUpdateResu
     builder.AppendLine($"NPM Directories: {npmUpdates.NpmDirectories.Length}");
 
     builder.AppendLine();
+    var nugetListFailures = csUpdates.Where(x => !x.NugetUpdates.RetrievedPackageListSuccessfully).ToImmutableArray();
+    builder.AppendLine($"Nuget List Failures: {nugetListFailures.Length}");
+    foreach (var nugetListFailure in nugetListFailures)
+    {
+        builder.AppendLine($"\t{nugetListFailure.CsprojFile}");
+    }
 
-    var csProjCompileFailures = compileResults.CompileCsProjResults.Results.Where(x => x.BuildResult != CompileResultType.Success).ToArray();
+    builder.AppendLine();
+    var nugetUpdateFailuresCount = csUpdates.SelectMany(x => x.NugetUpdates.Updates).Where(x => !x.UpdatedSuccessfully).Count();
+    builder.AppendLine($"Nuget Update Failures: {nugetUpdateFailuresCount}");
+    foreach (var csUpdate in csUpdates)
+    {
+        var nugetUpdateFailures = csUpdate.NugetUpdates.Updates.Where(x => !x.UpdatedSuccessfully).ToImmutableArray();
+        if (nugetUpdateFailures.Any())
+        {
+            builder.AppendLine($"\t{csUpdate.CsprojFile}");
+            foreach (var nugetUpdate in nugetUpdateFailures)
+            {
+                builder.AppendLine($"\t\t{nugetUpdate.PackageId}");
+            }
+        }
+    }
 
+    builder.AppendLine();
+    var csProjCompileFailures = compileResults.CompileCsProjResults.Results.Where(x => x.BuildResult != CompileResultType.Success).ToImmutableArray();
     builder.AppendLine($"CsProj Build Failures: {csProjCompileFailures.Length}");
     foreach (var csProjCompileFailure in csProjCompileFailures)
     {
         builder.AppendLine($"\t{csProjCompileFailure.BuildResult}:{csProjCompileFailure.CsProjFile}");
     }
 
-    var npmCompileFailures = compileResults.CompileNpmDirectoryResults.Results.Where(x => x.BuildResult != CompileResultType.Success).ToArray();
+    builder.AppendLine();
+    var npmCompileFailures = compileResults.CompileNpmDirectoryResults.Results.Where(x => x.BuildResult != CompileResultType.Success).ToImmutableArray();
     builder.AppendLine($"NPM Directory Build Failures: {npmCompileFailures.Length}");
     foreach (var npmCompileFailure in npmCompileFailures)
     {

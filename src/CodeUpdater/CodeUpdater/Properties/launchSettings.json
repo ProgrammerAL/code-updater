@@ -2,7 +2,7 @@
   "profiles": {
     "CodeUpdater": {
       "commandName": "Project",
-      "commandLineArgs": "--rootdirectory \"D:\\GitHub\\Purple-Spike\\public-web-app\""
+      "commandLineArgs": "--directory \"D:\\GitHub\\Purple-Spike\\arcade-machine-local-services\""
     }
   }
 }
