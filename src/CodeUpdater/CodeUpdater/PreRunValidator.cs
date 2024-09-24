@@ -41,7 +41,7 @@ public class PreRunValidator(ILogger Logger)
     private async ValueTask<bool> IsPowerShellInstalledAsync()
     {
         var output = await RunProcessAndGetOutputAsync("Write-Host 'test'");
-        return string.Equals(output, "test");
+        return string.Equals(output?.Trim(), "test");
     }
 
     private async ValueTask<bool> CanCheckNpmUpdatesAsync()

@@ -71,23 +71,28 @@ public class WorkLocator(ILogger Logger)
     public ImmutableArray<string> FindNpmDirectories(string rootDirectory, ImmutableArray<string> skipPaths)
     {
         var allPackageJsonPaths = Directory.GetFiles(rootDirectory, "package.json", SearchOption.AllDirectories);
-        var validPackageJsonPaths = new List<string>();
+        var validPaths = new List<string>();
 
         foreach (var packageJsonPath in allPackageJsonPaths)
         {
-            var skipPath = skipPaths.FirstOrDefault(x => packageJsonPath.Contains(x, StringComparison.OrdinalIgnoreCase));
+            var packagePath = Path.GetDirectoryName(packageJsonPath);
+            if (string.IsNullOrWhiteSpace(packagePath))
+            {
+                Logger.Information($"Skipping '{packageJsonPath}' file because it's path is null or empty");
+                continue;
+            }
+
+            var skipPath = skipPaths.FirstOrDefault(x => packagePath.Contains(x, StringComparison.OrdinalIgnoreCase));
             if (skipPath is object)
             {
-                Logger.Information($"Skipping '{packageJsonPath}' file because it's path should be ignored by rule: {skipPath}");
+                Logger.Information($"Skipping '{packagePath}' because it's path should be ignored by rule: {skipPath}");
             }
             else
             {
-                validPackageJsonPaths.Add(packageJsonPath);
+                validPaths.Add(packagePath);
             }
-
-            validPackageJsonPaths.Add(packageJsonPath);
         }
 
-        return validPackageJsonPaths.ToImmutableArray();
+        return validPaths.ToImmutableArray();
     }
 }
