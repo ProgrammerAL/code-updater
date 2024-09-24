@@ -18,4 +18,10 @@ public class CommandOptions
 
     [Option(Required = false, HelpText = "Npm command to run to \"build\" the project. Default value is `build`. Format run is: npm run <NpmBuildCommand>.")]
     public string NpmBuildCommand { get; set; } = "build";
+
+    [Option(Required = false, HelpText = "Target Framework to set in all *.CsProj files. Default value is `net8.0`")]
+    public string DotNetTargetFrameworkValue { get; set; } = "net8.0";
+
+    [Option(Required = false, HelpText = "C# language version to set in all *.CsProj files. Default value is `latest`")]
+    public string LangVersionValue { get; set; } = "latest";
 }
