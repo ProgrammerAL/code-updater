@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Serilog;
 
 using ProgrammerAl.SourceGenerators.PublicInterfaceGenerator.Attributes;
+using static ProgrammerAL.CodeUpdater.Helpers.RunProcessHelper;
 
 namespace ProgrammerAL.CodeUpdater.Helpers;
 
@@ -25,7 +26,6 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
         //      But also on Windows, we can't get the output. So as a workaround to all of this, just run it through PowerShell
         var startInfo = new ProcessStartInfo("pwsh", $"-Command \"{commandString}\"")
         {
-            RedirectStandardOutput = true,
             UseShellExecute = false,
             CreateNoWindow = true,
             WorkingDirectory = path
@@ -61,10 +61,17 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
             return new ProcessOutput(Started: false, CompletedSuccessfully: false, Output: "");
         }
 
+        //Get the task, then finalize the read once the wait is comepleted
+        //https://stackoverflow.com/questions/139593/processstartinfo-hanging-on-waitforexit-why/53504707#53504707
+        var processOutputTask = process.StandardOutput.ReadToEndAsync();
         var completedSuccessfully = process.WaitForExit(DefaultTimeout);
-        var processOutput = await process.StandardOutput.ReadToEndAsync();
+        if (completedSuccessfully)
+        {
+            var processOutput = await processOutputTask;
+            return new ProcessOutput(Started: true, CompletedSuccessfully: completedSuccessfully, Output: processOutput);
+        }
 
-        return new ProcessOutput(Started: true, CompletedSuccessfully: completedSuccessfully, Output: processOutput);
+        return new ProcessOutput(Started: true, CompletedSuccessfully: false, Output: "");
     }
 
 
@@ -72,7 +79,7 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
     {
         var processArgs = new ProcessStartInfo(fileName, arguments)
         {
-            RedirectStandardOutput = true
+            RedirectStandardOutput = true,
         };
         var process = Process.Start(processArgs);
 
@@ -81,8 +88,9 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
             return new ProcessOutput(Started: false, CompletedSuccessfully: false, Output: "");
         }
 
+        var processOutputTask = process.StandardOutput.ReadToEndAsync();
         var completedSuccessfully = process.WaitForExit(DefaultTimeout);
-        var processOutput = await process.StandardOutput.ReadToEndAsync();
+        var processOutput = await processOutputTask;
 
         return new ProcessOutput(Started: true, CompletedSuccessfully: completedSuccessfully, Output: processOutput);
     }
