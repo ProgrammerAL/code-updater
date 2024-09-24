@@ -14,6 +14,8 @@ namespace ProgrammerAL.CodeUpdater.Helpers;
 [GenerateInterface]
 public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
 {
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(5);
+
     public record ProcessOutput(bool Started, bool CompletedSuccessfully, string Output);
 
     public void RunProwerShellCommandToCompletion(string path, string commandString)
@@ -36,7 +38,7 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
         }
         else
         {
-            process.WaitForExit();
+            _ = process.WaitForExit(DefaultTimeout);
         }
     }
 
@@ -58,12 +60,8 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
         {
             return new ProcessOutput(Started: false, CompletedSuccessfully: false, Output: "");
         }
-        else
-        {
-            process.WaitForExit();
-        }
 
-        var completedSuccessfully = process.WaitForExit(TimeSpan.FromMinutes(5));
+        var completedSuccessfully = process.WaitForExit(DefaultTimeout);
         var processOutput = await process.StandardOutput.ReadToEndAsync();
 
         return new ProcessOutput(Started: true, CompletedSuccessfully: completedSuccessfully, Output: processOutput);
@@ -83,7 +81,7 @@ public class RunProcessHelper(ILogger Logger) : IRunProcessHelper
             return new ProcessOutput(Started: false, CompletedSuccessfully: false, Output: "");
         }
 
-        var completedSuccessfully = process.WaitForExit(TimeSpan.FromMinutes(5));
+        var completedSuccessfully = process.WaitForExit(DefaultTimeout);
         var processOutput = await process.StandardOutput.ReadToEndAsync();
 
         return new ProcessOutput(Started: true, CompletedSuccessfully: completedSuccessfully, Output: processOutput);

@@ -7,10 +7,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using ProgrammerAL.CodeUpdater.Helpers;
+
 using Serilog;
 
 namespace ProgrammerAL.CodeUpdater;
-public class PreRunValidator(ILogger Logger)
+public class PreRunValidator(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
     public async ValueTask<bool> VerifyCanRunAsync(UpdateWork updateWork)
     {
@@ -40,19 +42,19 @@ public class PreRunValidator(ILogger Logger)
 
     private async ValueTask<bool> IsPowerShellInstalledAsync()
     {
-        var output = await RunProcessAndGetOutputAsync("Write-Host 'test'");
-        return string.Equals(output?.Trim(), "test");
+        var commandResult = await RunProcessHelper.RunProwerShellCommandToCompletionAndGetOutputAsync(path: "./", "Write-Host 'test'");
+        return string.Equals(commandResult.Output.Trim(), "test");
     }
 
     private async ValueTask<bool> CanCheckNpmUpdatesAsync()
     {
-        var output = await RunProcessAndGetOutputAsync("npm list --global --json");
-        if (string.IsNullOrWhiteSpace(output))
+        var commandResult = await RunProcessHelper.RunProwerShellCommandToCompletionAndGetOutputAsync(path: "./", "npm list --global --json");
+        if (string.IsNullOrWhiteSpace(commandResult.Output))
         {
             return false;
         }
 
-        using var jsonDoc = JsonDocument.Parse(output);
+        using var jsonDoc = JsonDocument.Parse(commandResult.Output);
 
         if (!jsonDoc.RootElement.TryGetProperty("dependencies", out var dependenciesElement))
         {
@@ -67,30 +69,6 @@ public class PreRunValidator(ILogger Logger)
         }
 
         return true;
-    }
-
-    private async ValueTask<string?> RunProcessAndGetOutputAsync(string commandString)
-    {
-        //Note: Running this in PowerShell because it's easier to run npm commands in PowerShell
-        //      On Windows, for some reason running 'npm' using Process.Start() doesn't work. The process can't be found, you have to change it to npm.cmd
-        //      But also on Windows, we can't get the output. So as a workaround to all of this, just run it through PowerShell
-        var startInfo = new ProcessStartInfo("pwsh", $"-Command \"{commandString}\"")
-        {
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        var process = Process.Start(startInfo);
-        if (process is null)
-        {
-            Logger.Error("Could not start PowerShell process");
-            return null;
-        }
-
-        process.WaitForExit();
-
-        var output = await process.StandardOutput.ReadToEndAsync();
-        return output;
     }
 
     public class NpmPackagesListDto

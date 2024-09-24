@@ -21,10 +21,10 @@ static async ValueTask RunAsync(CommandOptions options)
 {
     var logger = Log.Logger;
 
-    var workLocator = new WorkLocator(logger);
-    var validator = new PreRunValidator(logger);
-    var cSharpUpdater = new CSharpUpdater(logger);
     var runProcessHelper = new RunProcessHelper(logger);
+    var workLocator = new WorkLocator(logger);
+    var validator = new PreRunValidator(logger, runProcessHelper);
+    var cSharpUpdater = new CSharpUpdater(logger);
     var npmUpdater = new NpmUpdater(runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
 
@@ -39,7 +39,7 @@ static async ValueTask RunAsync(CommandOptions options)
         return;
     }
 
-    cSharpUpdater.UpdateAllCSharpProjects(updateWork);
+    //cSharpUpdater.UpdateAllCSharpProjects(updateWork);
     npmUpdater.UpdateNpmPackages(updateWork);
 
     //After updating everything, compile all projects

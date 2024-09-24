@@ -14,7 +14,7 @@ public class CompileRunner(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
     public async ValueTask CompileProjectsAsync(UpdateWork updateWork, string npmBuildCommand)
     {
-        await CompileAllCSharpProjectsAsync(updateWork);
+        //await CompileAllCSharpProjectsAsync(updateWork);
         await BuildAllNpmDirectoriesAsync(updateWork, npmBuildCommand);
     }
 
