@@ -1,12 +1,8 @@
 ﻿
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Xml.Linq;
-
 using CommandLine;
 
 using ProgrammerAL.CodeUpdater;
+using ProgrammerAL.CodeUpdater.Helpers;
 using ProgrammerAL.CodeUpdater.Updaters;
 
 using Serilog;
@@ -16,7 +12,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 await Parser.Default.ParseArguments<CommandOptions>(args)
-         .WithParsedAsync<CommandOptions>(async options =>
+         .WithParsedAsync(async options =>
          {
              await RunAsync(options);
          });
@@ -27,9 +23,10 @@ static async ValueTask RunAsync(CommandOptions options)
 
     var workLocator = new WorkLocator(logger);
     var validator = new PreRunValidator(logger);
-    var nugetUpdater = new NugetUpdater(logger);
-    var csProjUpdater = new CsProjUpdater(logger);
-    var compileRunner = new CompileRunner(logger);
+    var cSharpUpdater = new CSharpUpdater(logger);
+    var runProcessHelper = new RunProcessHelper(logger);
+    var npmUpdater = new NpmUpdater(runProcessHelper);
+    var compileRunner = new CompileRunner(logger, runProcessHelper);
 
     var skipPaths = workLocator.DetermineSkipPaths(options.IgnorePatterns);
 
@@ -42,20 +39,13 @@ static async ValueTask RunAsync(CommandOptions options)
         return;
     }
 
-    var csProjFilesPaths = workLocator.FindCsProjFiles(options.RootDirectory, skipPaths);
-
-    foreach (var csProjFilePath in csProjFilesPaths)
-    {
-        logger.Information($"Updating '{csProjFilePath}'");
-
-        nugetUpdater.UpdateNugetPackages(csProjFilePath);
-        csProjUpdater.UpdateCsProjPropertyValues(csProjFilePath);
-    }
+    cSharpUpdater.UpdateAllCSharpProjects(updateWork);
+    npmUpdater.UpdateNpmPackages(updateWork);
 
     //After updating everything, compile all projects
     //  Don't do this in the above loop in case a project needs an update that would cause it to not compile
     //  So wait for all projects to be updated
-    await compileRunner.CompileProjectsAsync(csProjFilesPaths);
+    await compileRunner.CompileProjectsAsync(updateWork, options.NpmBuildCommand);
 }
 
 

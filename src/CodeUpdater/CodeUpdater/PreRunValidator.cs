@@ -83,7 +83,7 @@ public class PreRunValidator(ILogger Logger)
         var process = Process.Start(startInfo);
         if (process is null)
         {
-            Logger.Error("Could not start npm process");
+            Logger.Error("Could not start PowerShell process");
             return null;
         }
 

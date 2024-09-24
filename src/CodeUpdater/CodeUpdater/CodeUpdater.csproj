@@ -13,6 +13,7 @@
 
 	<ItemGroup>
 	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
+	  <PackageReference Include="PublicInterfaceGenerator" Version="0.1.0-preview.28" />
 	  <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 	</ItemGroup>
 
