@@ -44,6 +44,7 @@ public enum TargetFrameworkUpdateType
 {
     NotFound,
     AlreadyHasCorrectValue,
+    HasNetStandardValue,
     Updated,
     AddedElement
 }

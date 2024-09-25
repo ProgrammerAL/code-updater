@@ -65,6 +65,13 @@ public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
             return TargetFrameworkUpdateType.AlreadyHasCorrectValue;
         }
 
+        //If a project is set to .NET Standard, don't update it. It's set that way for a reason
+        if (targetFrameworkElm.Value.StartsWith("netstandard"))
+        {
+            Logger.Information($"Skipping target framework update because project is using .NET Standard: {targetFrameworkElm.Value}");
+            return TargetFrameworkUpdateType.HasNetStandardValue;
+        }
+
         Logger.Information($"Updating target framework from '{targetFrameworkElm.Value}' to '{CommandOptions.DotNetTargetFramework}'");
         targetFrameworkElm.Value = CommandOptions.DotNetTargetFramework;
 
