@@ -60,4 +60,6 @@ Ignore packages inside node_modules folder:
 - /node_modules/
 - \node_modules\
 
+## .NET Standard
 
+When updating *.csproj files to a specific `TargetFramework` version, the project is skipped if using .NET Standard. Those are usually set for a specific level of API compatibility so we don't want to mess with those.
