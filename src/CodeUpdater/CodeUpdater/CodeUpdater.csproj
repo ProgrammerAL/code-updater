@@ -13,7 +13,7 @@
 
 	<PropertyGroup>
 		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>code-update</ToolCommandName>
+		<ToolCommandName>code-updater</ToolCommandName>
 	</PropertyGroup>
 
 	<ItemGroup>
