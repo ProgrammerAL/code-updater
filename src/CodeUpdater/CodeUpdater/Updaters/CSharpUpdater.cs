@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 
 using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.CodeUpdater.Options;
 
 using Serilog;
 
@@ -16,15 +17,18 @@ public class CSharpUpdater
 
     private readonly ILogger _logger;
     private readonly IRunProcessHelper _runProcessHelper;
-    private readonly CommandOptions _commandOptions;
+    private readonly UpdateOptions _updateOptions;
 
-    public CSharpUpdater(ILogger logger, IRunProcessHelper runProcessHelper, CommandOptions commandOptions)
+    public CSharpUpdater(
+        ILogger logger,
+        IRunProcessHelper runProcessHelper,
+        UpdateOptions updateOptions)
     {
         _logger = logger;
         _runProcessHelper = runProcessHelper;
-        _commandOptions = commandOptions;
+        _updateOptions = updateOptions;
         _nugetUpdater = new NugetUpdater(_logger, _runProcessHelper);
-        _csProjUpdater = new CsProjUpdater(_logger, _commandOptions);
+        _csProjUpdater = new CsProjUpdater(_logger, updateOptions);
     }
 
     public async ValueTask<ImmutableArray<CSharpUpdateResult>> UpdateAllCSharpProjectsAsync(UpdateWork updateWork)

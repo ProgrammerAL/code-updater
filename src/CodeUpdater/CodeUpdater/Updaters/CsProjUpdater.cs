@@ -10,7 +10,7 @@ using Serilog;
 
 namespace ProgrammerAL.CodeUpdater.Updaters;
 
-public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
+public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 {
     public CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath)
     {
@@ -18,99 +18,149 @@ public class CsProjUpdater(ILogger Logger, CommandOptions CommandOptions)
 
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
-        TargetFrameworkUpdateType targetFrameworkUpdate = TargetFrameworkUpdateType.NotFound;
-        LangVersionUpdateType langVersionUpdateType;
+        var targetFrameworkUpdates = new CsprojUpdateTracker(
+            "TargetFramework",
+            UpdateOptions.DotNetTargetFramework,
+            skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
+        var langUpdates = new CsprojUpdateTracker(
+            "LangVersion",
+            UpdateOptions.DotNetLangVersion);
+        var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
+            "EnableNETAnalyzers",
+            UpdateOptions.EnableNetAnalyzers.ToString().ToLower());
+        var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
+            "EnforceCodeStyleInBuild",
+            UpdateOptions.EnforceCodeStyleInBuild.ToString().ToLower());
 
-        var langUpdateValues = new List<LangVersionUpdateType>();
-        foreach (var propertyGroupElement in propertyGroups)
-        {
-            var thisTargetFrameworkUpdateType = UpdateTargetFramework(propertyGroupElement);
-            if (thisTargetFrameworkUpdateType != TargetFrameworkUpdateType.NotFound)
-            {
-                targetFrameworkUpdate = thisTargetFrameworkUpdateType;
-            }
-
-            var updateLangResult = UpdateLangVersion(propertyGroupElement);
-            langUpdateValues.Add(updateLangResult);
-        }
-
-        //If no LangVersion elements were found, add one
-        if (langUpdateValues.All(x => x == LangVersionUpdateType.NotFound))
-        {
-            langVersionUpdateType = LangVersionUpdateType.AddedElement;
-            AddLangVersionElement(CommandOptions.DotNetLangVersion, csProjXmlDoc);
-        }
-        else
-        {
-            langVersionUpdateType = langUpdateValues.First(x => x != LangVersionUpdateType.NotFound);
-        }
+        UpdateOrAddCsProjValues(
+            csProjXmlDoc,
+            propertyGroups,
+            targetFrameworkUpdates,
+            langUpdates,
+            enableNETAnalyzersUpdates,
+            enforceCodeStyleInBuildUpdates);
 
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
         File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), Encoding.UTF8);
 
+        var langVersionUpdateType = langUpdates.GetFinalResult();
+        var targetFrameworkUpdate = targetFrameworkUpdates.GetFinalResult();
         return new CsProjUpdateResult(csProjFilePath, langVersionUpdateType, targetFrameworkUpdate);
     }
 
-    private TargetFrameworkUpdateType UpdateTargetFramework(XElement childElm)
+    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, params CsprojUpdateTracker[] updates)
     {
-        var targetFrameworkElm = childElm.Element("TargetFramework");
-        if (string.IsNullOrEmpty(targetFrameworkElm?.Value))
+        foreach (var propertyGroupElement in propertyGroupsElements)
         {
-            return TargetFrameworkUpdateType.NotFound;
+            foreach (var update in updates)
+            {
+                UpdateCsprojValue(propertyGroupElement, update);
+            }
         }
 
-        if (string.Equals(targetFrameworkElm.Value, CommandOptions.DotNetTargetFramework))
-        {
-            return TargetFrameworkUpdateType.AlreadyHasCorrectValue;
-        }
-
-        //If a project is set to .NET Standard, don't update it. It's set that way for a reason
-        if (targetFrameworkElm.Value.StartsWith("netstandard"))
-        {
-            Logger.Information($"Skipping target framework update because project is using .NET Standard: {targetFrameworkElm.Value}");
-            return TargetFrameworkUpdateType.HasNetStandardValue;
-        }
-
-        Logger.Information($"Updating target framework from '{targetFrameworkElm.Value}' to '{CommandOptions.DotNetTargetFramework}'");
-        targetFrameworkElm.Value = CommandOptions.DotNetTargetFramework;
-
-        return TargetFrameworkUpdateType.Updated;
+        AddMissingElements(csProjXmlDoc, updates);
     }
 
-    private LangVersionUpdateType UpdateLangVersion(XElement childElm)
+    private void AddMissingElements(XDocument csProjXmlDoc, params CsprojUpdateTracker[] updates)
     {
-        var langVersionElm = childElm.Element("LangVersion");
-        if (langVersionElm is null)
+        var updatesToMake = new List<CsprojUpdateTracker>();
+        foreach (var update in updates)
         {
-            return LangVersionUpdateType.NotFound;
+            if (update.ShouldAddElement())
+            {
+                updatesToMake.Add(update);
+            }
         }
 
-        if (string.Equals(langVersionElm.Value, CommandOptions.DotNetLangVersion))
+        if (updatesToMake.Any())
         {
-            return LangVersionUpdateType.AlreadyHasCorrectValue;
-        }
+            var propertyGroup = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
+            if (propertyGroup is null)
+            {
+                Logger.Information("Adding new PropertyGroup element for other required elements");
+                var newPropertyGroup = new XElement("PropertyGroup");
+                csProjXmlDoc.Add(newPropertyGroup);
 
-        Logger.Information($"Updating language version from '{langVersionElm.Value}' to '{CommandOptions.DotNetLangVersion}'");
-        langVersionElm.Value = CommandOptions.DotNetLangVersion;
-        return LangVersionUpdateType.Updated;
+                propertyGroup = newPropertyGroup;
+            }
+
+            foreach (var elementToAdd in updatesToMake)
+            {
+                Logger.Information($"Adding {elementToAdd.ElementName} element to csproj");
+                var newElement = new XElement(elementToAdd.ElementName, elementToAdd.NewValue);
+                propertyGroup.Add(newElement);
+
+                elementToAdd.SetResults.Add(CsprojValueUpdateResultType.AddedElement);
+            }
+        }
     }
 
-    private void AddLangVersionElement(string LangVersionValue, XDocument csProjXmlDoc)
+    private void UpdateCsprojValue(XElement childElm, CsprojUpdateTracker updateTracker)
     {
-        var existingPropertyGroup = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
-        if (existingPropertyGroup is object)
+        var element = childElm.Element(updateTracker.ElementName);
+        if (string.IsNullOrEmpty(element?.Value))
         {
-            Logger.Information("Adding LangVersion element to first PropertyGroup element");
-            var newElement = new XElement("LangVersion", LangVersionValue);
-            existingPropertyGroup.Add(newElement);
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.NotFound);
+        }
+        else if (string.Equals(element.Value, updateTracker.NewValue))
+        {
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.AlreadyHasCorrectValue);
+        }
+        else if (updateTracker.SkipStartsWithValues.Any(x => element.Value.StartsWith(x)))
+        {
+            Logger.Information($"Skipping {updateTracker.ElementName} update because value '{element.Value}' starts with one of these: {string.Join(", ", updateTracker.SkipStartsWithValues)}");
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.HasSkipValue);
         }
         else
         {
-            Logger.Information("Adding LangVersion element to a new PropertyGroup element");
-            var newPropertyGroup = new XElement("PropertyGroup",
-                                    new XElement("LangVersion", LangVersionValue));
-            csProjXmlDoc.Add(newPropertyGroup);
+            Logger.Information($"Updating {updateTracker.ElementName} from '{element.Value}' to '{updateTracker.NewValue}'");
+            element.Value = updateTracker.NewValue;
+
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.Updated);
+        }
+    }
+
+    public class CsprojUpdateTracker
+    {
+        public CsprojUpdateTracker(string elementName, string newValue)
+            : this(elementName, newValue, ImmutableArray<string>.Empty)
+        {
+        }
+
+        public CsprojUpdateTracker(string elementName, string newValue, ImmutableArray<string> skipStartsWithValues)
+        {
+            ElementName = elementName;
+            NewValue = newValue;
+            SkipStartsWithValues = skipStartsWithValues;
+            SetResults = new List<CsprojValueUpdateResultType>();
+        }
+
+        public string ElementName { get; }
+        public string NewValue { get; }
+        public ImmutableArray<string> SkipStartsWithValues { get; }
+
+        public List<CsprojValueUpdateResultType> SetResults { get; }
+
+        public CsprojValueUpdateResultType GetFinalResult()
+        {
+            if (SetResults.Count == 0)
+            {
+                return CsprojValueUpdateResultType.Unknown;
+            }
+
+            var firstNotNotFound = SetResults.FirstOrDefault(x => x != CsprojValueUpdateResultType.NotFound);
+            if (firstNotNotFound != CsprojValueUpdateResultType.Unknown)
+            {
+                return firstNotNotFound;
+            }
+
+            return CsprojValueUpdateResultType.NotFound;
+        }
+
+        public bool ShouldAddElement()
+        {
+            return SetResults.All(x => x == CsprojValueUpdateResultType.NotFound);
         }
     }
 }

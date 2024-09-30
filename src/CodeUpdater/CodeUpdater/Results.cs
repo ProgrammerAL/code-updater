@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace ProgrammerAL.CodeUpdater;
 
-public record CSharpUpdateResult(string CsprojFile, NugetUpdateResults NugetUpdates, LangVersionUpdateType LangVersionUpdate, TargetFrameworkUpdateType TargetFrameworkUpdate);
+public record CSharpUpdateResult(string CsprojFile, NugetUpdateResults NugetUpdates, CsprojValueUpdateResultType LangVersionUpdate, CsprojValueUpdateResultType TargetFrameworkUpdate);
 
 public record NugetUpdateResults(bool RetrievedPackageListSuccessfully, ImmutableArray<NugetUpdateResult> Updates);
 public record NugetUpdateResult(string CsProjFile, string PackageId, bool UpdatedSuccessfully);
 
-public record CsProjUpdateResult(string CsProjFile, LangVersionUpdateType LangVersionUpdate, TargetFrameworkUpdateType TargetFrameworkUpdate);
+public record CsProjUpdateResult(string CsProjFile, CsprojValueUpdateResultType LangVersionUpdate, CsprojValueUpdateResultType TargetFrameworkUpdate);
 
 public record NpmUpdates(ImmutableArray<string> NpmDirectories);
 
@@ -32,19 +32,12 @@ public enum CompileResultType
     BuildErrors
 } 
 
-public enum LangVersionUpdateType
+public enum CsprojValueUpdateResultType
 {
+    Unknown,
     NotFound,
     AlreadyHasCorrectValue,
-    Updated,
-    AddedElement
-}
-
-public enum TargetFrameworkUpdateType
-{
-    NotFound,
-    AlreadyHasCorrectValue,
-    HasNetStandardValue,
+    HasSkipValue,
     Updated,
     AddedElement
 }

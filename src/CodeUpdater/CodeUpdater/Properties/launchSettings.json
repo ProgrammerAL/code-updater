@@ -2,7 +2,7 @@
   "profiles": {
     "CodeUpdater": {
       "commandName": "Project",
-      "commandLineArgs": "--directory \"D:\\GitHub\\Purple-Spike\\arcade-machine-local-services\""
+      "commandLineArgs": "--config-file \"../../../sampleUpdateOptions.json"
     }
   }
 }

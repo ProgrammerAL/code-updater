@@ -1,0 +1,9 @@
+{
+  "RootDirectory": "D:\\GitHub\\Purple-Spike\\arcade-machine-local-services",
+  "IgnorePatterns": [],
+  "NpmBuildCommand": "publish",
+  "DotNetTargetFramework": "net8.0",
+  "DotNetLangVersion": "latest",
+  "EnableNetAnalyzers": true,
+  "EnforceCodeStyleInBuild": true
+}

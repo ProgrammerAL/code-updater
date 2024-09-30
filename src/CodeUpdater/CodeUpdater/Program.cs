@@ -1,12 +1,15 @@
 ﻿
+using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+using System.Text.Json;
 
 using CommandLine;
 
 using ProgrammerAL.CodeUpdater;
 using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.CodeUpdater.Options;
 using ProgrammerAL.CodeUpdater.Updaters;
 
 using Serilog;
@@ -21,20 +24,22 @@ await Parser.Default.ParseArguments<CommandOptions>(args)
              await RunAsync(options);
          });
 
-static async ValueTask RunAsync(CommandOptions options)
+static async ValueTask RunAsync(CommandOptions optionOptions)
 {
     var logger = Log.Logger;
+
+    var updateOptions = await LoadUpdateOptionsAsync(optionOptions.ConfigFile);
 
     var runProcessHelper = new RunProcessHelper(logger);
     var workLocator = new WorkLocator(logger);
     var validator = new PreRunValidator(logger, runProcessHelper);
-    var cSharpUpdater = new CSharpUpdater(logger, runProcessHelper, options);
+    var cSharpUpdater = new CSharpUpdater(logger, runProcessHelper, updateOptions);
     var npmUpdater = new NpmUpdater(runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
 
-    var skipPaths = workLocator.DetermineSkipPaths(options.IgnorePatterns);
+    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.IgnorePatterns);
 
-    var updateWork = workLocator.DetermineUpdateWork(options.Directory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(updateOptions.RootDirectory, skipPaths);
 
     var canRun = await validator.VerifyCanRunAsync(updateWork);
 
@@ -49,9 +54,53 @@ static async ValueTask RunAsync(CommandOptions options)
     //After updating everything, compile all projects
     //  Don't do this in the above loop in case a project needs an update that would cause it to not compile
     //  So wait for all projects to be updated
-    var compileResults = await compileRunner.CompileProjectsAsync(updateWork, options.NpmBuildCommand);
+    var compileResults = await compileRunner.CompileProjectsAsync(updateWork, updateOptions.NpmBuildCommand);
 
     OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, logger);
+}
+
+static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)
+{
+    if (!File.Exists(configFilePath))
+    {
+        throw new Exception($"Config file does not exist at path: {configFilePath}");
+    }
+
+    var updateOptionJson = await File.ReadAllTextAsync(configFilePath);
+    if (string.IsNullOrWhiteSpace(updateOptionJson))
+    {
+        throw new Exception($"Config file is empty at path: {configFilePath}");
+    }
+
+    var updateOptions = JsonSerializer.Deserialize<UpdateOptions>(updateOptionJson, new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true,
+    });
+
+    if (updateOptions is null)
+    {
+        throw new Exception($"Could not deserialize config file from path: {configFilePath}");
+    }
+
+    var validationResults = new List<ValidationResult>();
+    var validationContext = new ValidationContext(updateOptions, serviceProvider: null, items: null);
+    var isValid = Validator.TryValidateObject(updateOptions, validationContext, validationResults: validationResults, validateAllProperties: true);
+
+    if (!isValid)
+    {
+        Log.Logger.Error($"Deserialized config file has invalid value(s). From path: {configFilePath}");
+        foreach (var result in validationResults)
+        {
+            if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
+            {
+                Log.Logger.Error(result.ErrorMessage);
+            }
+        }
+
+        throw new Exception($"Deserialized config file invalid from path: {configFilePath}");
+    }
+
+    return updateOptions;
 }
 
 static void OutputSummary(UpdateWork updateWork, ImmutableArray<CSharpUpdateResult> csUpdates, NpmUpdates npmUpdates, CompileResults compileResults, ILogger logger)
