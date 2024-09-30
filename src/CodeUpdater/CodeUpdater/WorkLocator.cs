@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.Tools.CodeUpdater;
 
 public record UpdateWork(ImmutableArray<string> CsProjectFiles, ImmutableArray<string> NpmDirectories);
 

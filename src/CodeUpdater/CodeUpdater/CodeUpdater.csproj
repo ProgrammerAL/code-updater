@@ -7,8 +7,8 @@
 		<Nullable>enable</Nullable>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<LangVersion>latest</LangVersion>
-		<RootNamespace>ProgrammerAL.CodeUpdater</RootNamespace>
-		<AssemblyName>ProgrammerAL.CodeUpdater</AssemblyName>
+		<RootNamespace>ProgrammerAL.Tools.CodeUpdater</RootNamespace>
+		<AssemblyName>ProgrammerAL.Tools.CodeUpdater</AssemblyName>
 	</PropertyGroup>
 
 	<ItemGroup>

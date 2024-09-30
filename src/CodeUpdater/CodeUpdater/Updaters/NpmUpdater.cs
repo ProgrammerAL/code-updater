@@ -7,11 +7,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater.Updaters;
+namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 public class NpmUpdater(IRunProcessHelper RunProcessHelper)
 {
     public NpmUpdates UpdateNpmPackages(UpdateWork updateWork)

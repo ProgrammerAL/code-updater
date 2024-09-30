@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 using CommandLine;
 
-namespace ProgrammerAL.CodeUpdater.Options;
+namespace ProgrammerAL.Tools.CodeUpdater.Options;
 public class CommandOptions
 {
     [Option(shortName: 'c', longName: "config-file", Required = true, HelpText = "Path to the file to use for config values when updating code")]

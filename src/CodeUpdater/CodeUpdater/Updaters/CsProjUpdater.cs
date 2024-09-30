@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater.Updaters;
+namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 
 public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 {

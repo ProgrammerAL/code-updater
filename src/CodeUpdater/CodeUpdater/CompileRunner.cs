@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.Tools.CodeUpdater;
 public class CompileRunner(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
     public async ValueTask<CompileResults> CompileProjectsAsync(UpdateWork updateWork, string npmBuildCommand)

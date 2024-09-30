@@ -7,10 +7,10 @@ using System.Text.Json;
 
 using CommandLine;
 
-using ProgrammerAL.CodeUpdater;
-using ProgrammerAL.CodeUpdater.Helpers;
-using ProgrammerAL.CodeUpdater.Options;
-using ProgrammerAL.CodeUpdater.Updaters;
+using ProgrammerAL.Tools.CodeUpdater;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Options;
+using ProgrammerAL.Tools.CodeUpdater.Updaters;
 
 using Serilog;
 

@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater.Updaters;
+namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 
 public class NugetUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.Tools.CodeUpdater;
 
 public record CSharpUpdateResult(string CsprojFile, NugetUpdateResults NugetUpdates, CsprojValueUpdateResultType LangVersionUpdate, CsprojValueUpdateResultType TargetFrameworkUpdate);
 

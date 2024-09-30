@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Serilog;
 
 using ProgrammerAl.SourceGenerators.PublicInterfaceGenerator.Attributes;
-using static ProgrammerAL.CodeUpdater.Helpers.RunProcessHelper;
+using static ProgrammerAL.Tools.CodeUpdater.Helpers.RunProcessHelper;
 
-namespace ProgrammerAL.CodeUpdater.Helpers;
+namespace ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 [GenerateInterface]
 public class RunProcessHelper(ILogger Logger) : IRunProcessHelper

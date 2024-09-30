@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.Tools.CodeUpdater;
 public class UpdateOptions
 {
     /// <summary>

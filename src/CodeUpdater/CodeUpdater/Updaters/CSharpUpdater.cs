@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
-using ProgrammerAL.CodeUpdater.Helpers;
-using ProgrammerAL.CodeUpdater.Options;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Options;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater.Updaters;
+namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 
 public class CSharpUpdater
 {

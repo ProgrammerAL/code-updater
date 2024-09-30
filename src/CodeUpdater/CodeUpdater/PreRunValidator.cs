@@ -7,11 +7,11 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-using ProgrammerAL.CodeUpdater.Helpers;
+using ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 using Serilog;
 
-namespace ProgrammerAL.CodeUpdater;
+namespace ProgrammerAL.Tools.CodeUpdater;
 public class PreRunValidator(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
     public async ValueTask<bool> VerifyCanRunAsync(UpdateWork updateWork)
