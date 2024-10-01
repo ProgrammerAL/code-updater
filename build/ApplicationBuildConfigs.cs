@@ -19,6 +19,7 @@ public record ProjectPaths(
     public static ProjectPaths LoadFromContext(ICakeContext context, string buildConfiguration, string srcDirectory, string nugetVersion)
     {
         var projectName = "CodeUpdater";
+        srcDirectory += $"/{projectName}";
         var pathToSln = srcDirectory + $"/{projectName}.sln";
         var projectDir = srcDirectory + $"/{projectName}";
         var csProjFile = projectDir + $"/{projectName}.csproj";
