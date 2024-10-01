@@ -10,8 +10,16 @@
 		<RootNamespace>ProgrammerAL.Tools.CodeUpdater</RootNamespace>
 		<AssemblyName>ProgrammerAL.Tools.CodeUpdater</AssemblyName>
 	</PropertyGroup>
-
 	<PropertyGroup>
+		<Version>0.1.0</Version>
+		<Title>Code Updater</Title>
+		<Authors>ProgrammerAL</Authors>
+		<Description>A .NET tool to update code and dependencies to latest versions.</Description>
+		<PackageProjectUrl>https://github.com/ProgrammerAL/code-updater</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ProgrammerAL/code-updater</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>tool</PackageTags>
+
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>code-updater</ToolCommandName>
 	</PropertyGroup>
