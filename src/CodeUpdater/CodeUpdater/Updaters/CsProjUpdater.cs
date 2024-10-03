@@ -19,18 +19,22 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
         var targetFrameworkUpdates = new CsprojUpdateTracker(
-            "TargetFramework",
+            CsprojUpdateTracker.TargetFramework,
             UpdateOptions.DotNetTargetFramework,
+            addIfElementNotFound: false,
             skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
         var langUpdates = new CsprojUpdateTracker(
-            "LangVersion",
-            UpdateOptions.DotNetLangVersion);
+            CsprojUpdateTracker.LangVersion,
+            UpdateOptions.DotNetLangVersion,
+            addIfElementNotFound: true);
         var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
-            "EnableNETAnalyzers",
-            UpdateOptions.EnableNetAnalyzers.ToString().ToLower());
+            CsprojUpdateTracker.EnableNETAnalyzers,
+            UpdateOptions.EnableNetAnalyzers.ToString().ToLower(),
+            addIfElementNotFound: true);
         var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
-            "EnforceCodeStyleInBuild",
-            UpdateOptions.EnforceCodeStyleInBuild.ToString().ToLower());
+            CsprojUpdateTracker.EnforceCodeStyleInBuild,
+            UpdateOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
+            addIfElementNotFound: true);
 
         UpdateOrAddCsProjValues(
             csProjXmlDoc,
@@ -55,7 +59,14 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         {
             foreach (var update in updates)
             {
-                UpdateCsprojValue(propertyGroupElement, update);
+                if (update.ElementName == CsprojUpdateTracker.TargetFramework)
+                {
+                    UpdateTargetFrameworkValue(propertyGroupElement, update);
+                }
+                else
+                {
+                    UpdateCsprojValue(propertyGroupElement, update);
+                }
             }
         }
 
@@ -121,24 +132,97 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         }
     }
 
+    private void UpdateTargetFrameworkValue(XElement childElm, CsprojUpdateTracker updateTracker)
+    {
+        var element = childElm.Element(CsprojUpdateTracker.TargetFramework);
+        if (string.IsNullOrEmpty(element?.Value))
+        {
+            //If there's no TargetFramework, maybe the project has a TargetFrameworks element
+            UpdateTargetFrameworksValue(childElm, updateTracker);
+        }
+        else if (string.Equals(element.Value, updateTracker.NewValue))
+        {
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.AlreadyHasCorrectValue);
+        }
+        else if (updateTracker.SkipStartsWithValues.Any(x => element.Value.StartsWith(x)))
+        {
+            Logger.Information($"Skipping {updateTracker.ElementName} update because value '{element.Value}' starts with one of these: {string.Join(", ", updateTracker.SkipStartsWithValues)}");
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.HasSkipValue);
+        }
+        else
+        {
+            Logger.Information($"Updating {updateTracker.ElementName} from '{element.Value}' to '{updateTracker.NewValue}'");
+            element.Value = updateTracker.NewValue;
+
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.Updated);
+        }
+    }
+
+    private void UpdateTargetFrameworksValue(XElement childElm, CsprojUpdateTracker updateTracker)
+    {
+        //TargetFrameworks can appear multiple times in a csproj file, so we need to update all of them
+        var elements = childElm.Elements(CsprojUpdateTracker.TargetFrameworks);
+        if (!elements.Any())
+        {
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.NotFound);
+            return;
+        }
+
+        foreach (var element in elements)
+        {
+            //TargetFrameworks are a string like "net8.0-android;net8.0-ios;"
+            //We want to update the first part of the string, so we need to split on the dash
+            var newElementString = "";
+            var existingValues = element.Value.Split(";");
+            foreach (var existingValue in existingValues)
+            {
+                var split = existingValue.Split("-");
+                if (split.Length == 2)
+                {
+                    newElementString += $"{updateTracker.NewValue}-{split[1]};";
+                }
+                else
+                {
+                    //As a just in case, just add the existing value and don't make any changes
+                    newElementString += $"{existingValue};";
+                }
+            }
+
+            newElementString = newElementString.TrimEnd(';');//Remove the last semicolon
+
+            Logger.Information($"Updating {updateTracker.ElementName} from '{element.Value}' to '{newElementString}'");
+            element.Value = newElementString;
+
+            updateTracker.SetResults.Add(CsprojValueUpdateResultType.Updated);
+        }
+    }
+
     public class CsprojUpdateTracker
     {
-        public CsprojUpdateTracker(string elementName, string newValue)
-            : this(elementName, newValue, ImmutableArray<string>.Empty)
+        public const string TargetFramework = "TargetFramework";
+        public const string TargetFrameworks = "TargetFrameworks";
+        public const string LangVersion = "LangVersion";
+        public const string EnableNETAnalyzers = "EnableNETAnalyzers";
+        public const string EnforceCodeStyleInBuild = "EnforceCodeStyleInBuild";
+
+        public CsprojUpdateTracker(string elementName, string newValue, bool addIfElementNotFound)
+            : this(elementName, newValue, addIfElementNotFound, ImmutableArray<string>.Empty)
         {
         }
 
-        public CsprojUpdateTracker(string elementName, string newValue, ImmutableArray<string> skipStartsWithValues)
+        public CsprojUpdateTracker(string elementName, string newValue, bool addIfElementNotFound, ImmutableArray<string> skipStartsWithValues)
         {
             ElementName = elementName;
             NewValue = newValue;
             SkipStartsWithValues = skipStartsWithValues;
+            AddIfElementNotFound = addIfElementNotFound;
             SetResults = new List<CsprojValueUpdateResultType>();
         }
 
         public string ElementName { get; }
         public string NewValue { get; }
         public ImmutableArray<string> SkipStartsWithValues { get; }
+        public bool AddIfElementNotFound { get; }
 
         public List<CsprojValueUpdateResultType> SetResults { get; }
 
@@ -160,7 +244,7 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 
         public bool ShouldAddElement()
         {
-            return SetResults.All(x => x == CsprojValueUpdateResultType.NotFound);
+            return AddIfElementNotFound && SetResults.All(x => x == CsprojValueUpdateResultType.NotFound);
         }
     }
 }

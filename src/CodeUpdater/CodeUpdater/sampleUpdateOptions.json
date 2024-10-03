@@ -1,5 +1,5 @@
 {
-  "RootDirectory": "D:\\GitHub\\Purple-Spike\\arcade-machine-local-services",
+  "RootDirectory": "D:\\GitHub\\Purple-Spike\\arcade-machine-local-services\\src\\DeviceApp",
   "IgnorePatterns": [],
   "NpmBuildCommand": "publish",
   "DotNetTargetFramework": "net8.0",
