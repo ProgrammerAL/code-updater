@@ -29,5 +29,9 @@
 	  <PackageReference Include="ProgrammerAl.SourceGenerators.PublicInterfaceGenerator" Version="1.0.0.62" PrivateAssets="All" />
 	  <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
 	</ItemGroup>
-
+	
+	<ItemGroup>
+		<!--Include the ReadMe in the nuget package-->
+		<None Include="../../../README.md" Pack="true" PackagePath="/" />
+	</ItemGroup>
 </Project>

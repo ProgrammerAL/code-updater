@@ -17,12 +17,7 @@ public class NugetUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
     public async ValueTask<NugetUpdateResults> UpdateNugetPackagesAsync(string csProjFilePath)
     {
         var csProjText = File.ReadAllText(csProjFilePath);
-        var processStartArgs = new ProcessStartInfo("dotnet", $"list {csProjFilePath} package --format json")
-        {
-            RedirectStandardOutput = true,
-        };
-
-        var nugetUpdateOutput = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", $"list {csProjFilePath} package --format json");
+        var nugetUpdateOutput = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", $"list \"{csProjFilePath}\" package --format json");
         if (!nugetUpdateOutput.CompletedSuccessfully)
         {
             return new NugetUpdateResults(RetrievedPackageListSuccessfully: false, ImmutableArray<NugetUpdateResult>.Empty);
