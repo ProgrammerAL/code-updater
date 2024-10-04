@@ -1,28 +1,30 @@
 # Code Updater
 
-The purpose of this project is to update all code versioning and dependencies below a directory. This is useful when you have a large number of projects that you want to update all at once. This application is designed to be run on a local machine, and then the changes are committed to source control. This allows for a more controlled update process, as you can manually check the changes before committing them.
+The purpose of this project is to update all code versioning and dependencies below a directory. This is useful when you have a large number of projects that you want to update all at once. This application is assumed to run on a local machine, and then the changes are manually committed to source control. This allows for a more controlled update process, because a developer is meant to manually check the changes before committing them.
 
-## What this Updates
+It would be great to get this to work for all kinds of languages/frameworks someday, but for now it's just .NET and NPM.
+
+## What Updates Are Done
 
 - Updates .NET *.csproj files to use a specified C# Language Version
-- Updates .NET *.csproj files to use a specified .NET SDK Version (TargetFramework)
+- Updates .NET *.csproj files to use a specified .NET SDK Version (AKA TargetFramework element)
 - Updates all NuGet packages in all *.csproj files to the latest version
 - Updates all NPM packages in all package.json files to the latest version
 
-## How to Use
+## How to Use It
 
-Remember, the purpose of this is to update code. It is assumed, and recommended, a developer runs this locally and verifies the changes before comitting to source control. Below are the steps to take.
+Remember, the purpose of this is to update code. It is assumed, and recommended, a developer runs this locally and verifies the changes before comitting to source control. Below are the steps assumed steps a user would follow.
 
 There are 2 ways to run this. As a .NET Tool installed on your machine, or downloading the repository and running the code yourself.
 
-1. Install the application
-  - Install the tool globally by running `todo`
-  - Clone this repository locally
+1. Install the application. Choose one:
+  - Install the tool globally by running `dotnet tool install --global ProgrammerAL.Tools.CodeUpdater --version 1.0.0`
+  - Or clone this repository locally
 2. Run the application
   - If you installed the tool, run it with the command: `code-updater --config-file "C:/my-repos/my-app-1"`
   - If you downloaded the code, open a terminal to the `~/src/CodeUpdater/CodeUpdater` directory and run the application using dotnet run while passing in the required arguments. Example: `dotnet run -- --config-file "C:/my-repos/my-app-1"`
 3. Wait for the application to finish. It will output the number of projects updated, and the number of projects that failed to update.
-4. Manually check a diff of all the projects to ensure everything is as you expect
+4. Manually check a diff of all the file changes to ensure everything is as you expect
 5. Commit the code changes to source control. Wait for a CI/CD pipeline to run and ensure everything is still working as expected.
 
 ## CLI Options
@@ -84,6 +86,21 @@ Ignore all obj and bin folders:
 Ignore packages inside node_modules folder:
 - /node_modules/
 - \node_modules\
+
+## Installing Locally vs Downloading the Code
+
+The tool is very opinionated. It updates all packages to the latest version, and sets some project level properties. If the tool does some things you can't use for your projects, you can download the code, make changes, and keep thay for yourself. Maybe in the future we can hide certain settings behind a flag. Feel free to file an issue and and we can discuss it.
+
+## Required 3rd Party Software
+
+In order to run the tool you need the following software installed on your local machine.
+
+- .NET CLI
+  - So you can install .NET Tool from nuget.org
+- PowerShell
+  - Quick Reminder: PowerShell is cross platform, you can run it on Linux and MacOS, not just Windows
+
+PowerShell is required as a workaround. The NPM executable on Windows doesn't run like other applications. It doesn't exit like a normal process. I don't know why, I never spent the time figuring it out. The workaround makes PowerShell the host application so it exits like you would expect, when the process is done. For this reason, whenever an external process must be run, it's run through PowerShell. Kind of a hack, but it works well enough.
 
 ## .NET Standard Projects
 
