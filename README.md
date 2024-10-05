@@ -32,34 +32,43 @@ There are 2 ways to run this. As a .NET Tool installed on your machine, or downl
 - --config-file, -d
 	- Required
 	- Path to the file to use for config values when updating code
-- --output-file, -o
-  - Optional
-  - If this is set, it will be the file to write logs to, in addition to the console
-- --log-level, -l
-  - Optional
-  - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+- --help, -h
+  - Outputs CLI help
 
 ## Config File
 
 The config file holds all values to determine what changes to make. The reason this is separate from CLI input arguments is to let a developer store this config in different repos but have this .NET Tool installed globally on their machine. That makes it easy to let other developers run this tool with specific settings for each repository, while only needing to provide a single CLI input argument.
 
-Below are the list of properties in the config file. All fields are required.
+Below are the list of properties in the config file.
 
 - RootDirectory
+  - Required
 	- Root directory to run from. Code Updater will search all child directories within this for projects to update.
 - IgnorePatterns
+  - Required
 	- String to ignore within file paths when looking for projects to update. This is OS sensitive, so use \ as the path separator for Windows, and / as the path separator everywhere else. Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. Note this example will only happen on Windows because that uses backslashes for path separators.- NpmBuildCommand
 - NpmBuildCommand
+  - Required
 	- After upgrading all of the code, this application will attempt to build all applications it updated. This option sets the npm command to run to do the build.
 	- Npm command to run to "compile" the npm directory. Default value is `publish`. Format run is: npm run <npmBuildCommand>.
 - DotNetTargetFramework
+  - Required
 	- Target Framework to set in all *.CsProj files
 - DotNetLangVersion
+  - Required
 	- C# language version to set in all *.CsProj files
 - EnableNetAnalyzers
+  - Required
 	- Boolean value to set the `EnableNetAnalyzers` csproj element to. If the `EnableNetAnalyzers` element does not exist in the project file, it will be added.
 - EnforceCodeStyleInBuild
+  - Required
 	- Boolean value to set the `EnforceCodeStyleInBuild` csproj element to. If the `EnableNetAnalyzers` element does not exist in the project file, it will be added.
+- OutputFile
+  - Optional
+  - If this is set, it will be the file to write logs to, in addition to the console
+- LogLevel
+  - Optional
+  - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
 
 ### Example Config File
 

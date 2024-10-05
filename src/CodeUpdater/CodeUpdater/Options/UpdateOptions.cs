@@ -55,4 +55,14 @@ public class UpdateOptions
     /// </summary>
     [Required]
     public required bool EnforceCodeStyleInBuild { get; set; }
+
+    /// <summary>
+    /// If this is set, it will be the file to write logs to, in addition to the console
+    /// </summary>
+    public string? OutputFile { get; set; }
+
+    /// <summary>
+    /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+    /// </summary>
+    public string? LogLevel { get; set; } = "verbose";
 }

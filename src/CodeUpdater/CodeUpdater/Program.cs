@@ -20,11 +20,10 @@ await Parser.Default.ParseArguments<CommandOptions>(args)
              await RunAsync(options);
          });
 
-static async ValueTask RunAsync(CommandOptions options)
+static async ValueTask RunAsync(CommandOptions commandOptions)
 {
-    var logger = SetupLogger(options);
-
-    var updateOptions = await LoadUpdateOptionsAsync(options.ConfigFile);
+    var updateOptions = await LoadUpdateOptionsAsync(commandOptions.ConfigFile);
+    var logger = SetupLogger(updateOptions);
 
     var runProcessHelper = new RunProcessHelper(logger);
     var workLocator = new WorkLocator(logger);
@@ -56,23 +55,23 @@ static async ValueTask RunAsync(CommandOptions options)
     OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, logger);
 }
 
-static ILogger SetupLogger(CommandOptions options)
+static ILogger SetupLogger(UpdateOptions updateOptions)
 {
     var loggerConfig = new LoggerConfiguration()
         .WriteTo.Console();
 
-    if (!string.IsNullOrWhiteSpace(options.OutputFile))
+    if (!string.IsNullOrWhiteSpace(updateOptions.OutputFile))
     {
-        loggerConfig = loggerConfig.WriteTo.File(options.OutputFile);
+        loggerConfig = loggerConfig.WriteTo.File(updateOptions.OutputFile);
     }
 
-    if (string.IsNullOrWhiteSpace(options.LogLevel))
+    if (string.IsNullOrWhiteSpace(updateOptions.LogLevel))
     {
         loggerConfig = loggerConfig.MinimumLevel.Verbose();
     }
     else
     {
-        loggerConfig = options.LogLevel.ToLower() switch
+        loggerConfig = updateOptions.LogLevel.ToLower() switch
         {
             "verbose" => loggerConfig.MinimumLevel.Verbose(),
             "info" => loggerConfig.MinimumLevel.Information(),
