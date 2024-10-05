@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -18,9 +19,22 @@ public class NpmUpdater(IRunProcessHelper RunProcessHelper)
     {
         foreach (var projectPath in updateWork.NpmDirectories)
         {
-            RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm-check-updates --upgrade");
-            RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm install --legacy-peer-deps");
-            RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, "npm audit fix --force");
+            string command = "";
+            try
+            {
+                command = "npm-check-updates --upgrade";
+                RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, command);
+
+                command = "npm install --legacy-peer-deps";
+                RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, command);
+
+                command = "npm audit fix --force";
+                RunProcessHelper.RunProwerShellCommandToCompletion(projectPath, command);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error updating npm packages at path'{ProjectPath}'. Command was '{Command}'", projectPath, command);
+            }
         }
 
         return new NpmUpdates(updateWork.NpmDirectories);

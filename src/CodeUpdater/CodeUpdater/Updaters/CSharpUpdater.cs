@@ -38,8 +38,9 @@ public class CSharpUpdater
         {
             _logger.Information($"Updating '{csProjFilePath}'");
 
-            var nugetUpdates = await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath);
-            var csProjUpdates = _csProjUpdater.UpdateCsProjPropertyValues(csProjFilePath);
+
+            var nugetUpdates = await UpdateNugetPackagesAsync(csProjFilePath);
+            var csProjUpdates = UpdateCsProjPropertyValues(csProjFilePath);
 
             builder.Add(new CSharpUpdateResult(
                 csProjFilePath,
@@ -49,5 +50,31 @@ public class CSharpUpdater
         }
 
         return builder.ToImmutableArray();
+    }
+
+    private async ValueTask<NugetUpdateResults> UpdateNugetPackagesAsync(string csProjFilePath)
+    {
+        try
+        {
+            return await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Error updating nuget packages in csproj file '{CsProjFilePath}'. {Ex}", csProjFilePath, ex.ToString());
+            return new NugetUpdateResults(RetrievedPackageListSuccessfully: false, ImmutableArray<NugetUpdateResult>.Empty);
+        }
+    }
+
+    private CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath)
+    {
+        try
+        {
+            return _csProjUpdater.UpdateCsProjPropertyValues(csProjFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Error updating csproj file '{CsProjFilePath}'. {Ex}", csProjFilePath, ex.ToString());
+            return new CsProjUpdateResult(csProjFilePath, CsprojValueUpdateResultType.Unknown, CsprojValueUpdateResultType.Unknown);
+        }
     }
 }
