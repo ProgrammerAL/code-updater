@@ -197,7 +197,7 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         }
     }
 
-    public class CsprojUpdateTracker
+    private class CsprojUpdateTracker
     {
         public const string TargetFramework = "TargetFramework";
         public const string TargetFrameworks = "TargetFrameworks";

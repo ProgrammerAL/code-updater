@@ -37,7 +37,7 @@ public class WorkLocator(ILogger Logger)
     }
 
     public UpdateWork DetermineUpdateWork(string rootDirectory, ImmutableArray<string> skipPaths)
-    { 
+    {
         var csProjFiles = FindCsProjFiles(rootDirectory, skipPaths);
         var npmDirectories = FindNpmDirectories(rootDirectory, skipPaths);
 

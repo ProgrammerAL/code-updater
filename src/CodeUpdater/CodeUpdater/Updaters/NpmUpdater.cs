@@ -13,7 +13,7 @@ using ProgrammerAL.Tools.CodeUpdater.Helpers;
 using Serilog;
 
 namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
-public class NpmUpdater(IRunProcessHelper RunProcessHelper)
+public class NpmUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
     public NpmUpdates UpdateNpmPackages(UpdateWork updateWork)
     {
@@ -33,7 +33,7 @@ public class NpmUpdater(IRunProcessHelper RunProcessHelper)
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Error updating npm packages at path'{ProjectPath}'. Command was '{Command}'", projectPath, command);
+                Logger.Error(ex, "Error updating npm packages at path'{ProjectPath}'. Command was '{Command}'", projectPath, command);
             }
         }
 

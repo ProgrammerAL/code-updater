@@ -29,7 +29,7 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     var workLocator = new WorkLocator(logger);
     var validator = new PreRunValidator(logger, runProcessHelper);
     var cSharpUpdater = new CSharpUpdater(logger, runProcessHelper, updateOptions);
-    var npmUpdater = new NpmUpdater(runProcessHelper);
+    var npmUpdater = new NpmUpdater(logger, runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
 
     var skipPaths = workLocator.DetermineSkipPaths(updateOptions.IgnorePatterns);

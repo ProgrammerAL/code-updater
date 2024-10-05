@@ -29,10 +29,10 @@ There are 2 ways to run this. As a .NET Tool installed on your machine, or downl
 
 ## CLI Options
 
-- --config-file, -d
+- `-d|--config-file`
 	- Required
 	- Path to the file to use for config values when updating code
-- --help, -h
+- `-h|--help`
   - Outputs CLI help
 
 ## Config File

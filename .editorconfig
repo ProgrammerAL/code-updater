@@ -11,6 +11,11 @@ indent_size = 4
 indent_style = space
 tab_width = 4
 
+# Organize usings
+dotnet_separate_import_directive_groups = true
+dotnet_sort_system_directives_first = true
+file_header_template = unset
+
 # New line preferences
 end_of_line = crlf
 insert_final_newline = true

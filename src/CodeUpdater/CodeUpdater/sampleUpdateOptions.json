@@ -5,5 +5,8 @@
   "DotNetTargetFramework": "net8.0",
   "DotNetLangVersion": "latest",
   "EnableNetAnalyzers": true,
-  "EnforceCodeStyleInBuild": true
+  "EnforceCodeStyleInBuild": true,
+  "RunDotnetFormat": true,
+  "OutputFile": "./code-updater-output.txt",
+  "LogLevel": "Verbose"
 }

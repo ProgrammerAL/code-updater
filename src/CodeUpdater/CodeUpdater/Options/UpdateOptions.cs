@@ -57,6 +57,12 @@ public class UpdateOptions
     public required bool EnforceCodeStyleInBuild { get; set; }
 
     /// <summary>
+    /// True to run the `dotnet format` command
+    /// </summary>
+    [Required]
+    public required bool RunDotnetFormat { get; set; }
+
+    /// <summary>
     /// If this is set, it will be the file to write logs to, in addition to the console
     /// </summary>
     public string? OutputFile { get; set; }

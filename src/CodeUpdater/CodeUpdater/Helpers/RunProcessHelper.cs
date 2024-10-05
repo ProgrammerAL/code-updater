@@ -5,10 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Serilog;
-
 using ProgrammerAl.SourceGenerators.PublicInterfaceGenerator.Attributes;
-using static ProgrammerAL.Tools.CodeUpdater.Helpers.RunProcessHelper;
+
+using Serilog;
 
 namespace ProgrammerAL.Tools.CodeUpdater.Helpers;
 
