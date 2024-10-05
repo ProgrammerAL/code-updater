@@ -32,10 +32,16 @@ There are 2 ways to run this. As a .NET Tool installed on your machine, or downl
 - --config-file, -d
 	- Required
 	- Path to the file to use for config values when updating code
+- --output-file, -o
+  - Optional
+  - If this is set, it will be the file to write logs to, in addition to the console
+- --log-level, -l
+  - Optional
+  - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
 
 ## Config File
 
-The config file holds all values to determine what changes to make to code files. The reason this is separate from CLI input arguments is to let a developer store this config in different repos but have this .NET Tool installed globally on their machine. That makes it easy to let other developers run this tool with specific settings for each repository, while only needing to provide a single CLI input argument.
+The config file holds all values to determine what changes to make. The reason this is separate from CLI input arguments is to let a developer store this config in different repos but have this .NET Tool installed globally on their machine. That makes it easy to let other developers run this tool with specific settings for each repository, while only needing to provide a single CLI input argument.
 
 Below are the list of properties in the config file. All fields are required.
 
