@@ -14,21 +14,17 @@ using ProgrammerAL.Tools.CodeUpdater.Updaters;
 
 using Serilog;
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateLogger();
-
 await Parser.Default.ParseArguments<CommandOptions>(args)
          .WithParsedAsync(async options =>
          {
              await RunAsync(options);
          });
 
-static async ValueTask RunAsync(CommandOptions optionOptions)
+static async ValueTask RunAsync(CommandOptions options)
 {
-    var logger = Log.Logger;
+    var logger = SetupLogger(options);
 
-    var updateOptions = await LoadUpdateOptionsAsync(optionOptions.ConfigFile);
+    var updateOptions = await LoadUpdateOptionsAsync(options.ConfigFile);
 
     var runProcessHelper = new RunProcessHelper(logger);
     var workLocator = new WorkLocator(logger);
@@ -45,6 +41,7 @@ static async ValueTask RunAsync(CommandOptions optionOptions)
 
     if (!canRun)
     {
+        logger.Fatal($"Cannot run, exiting before trying to do any work...");
         return;
     }
 
@@ -57,6 +54,36 @@ static async ValueTask RunAsync(CommandOptions optionOptions)
     var compileResults = await compileRunner.CompileProjectsAsync(updateWork, updateOptions.NpmBuildCommand);
 
     OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, logger);
+}
+
+static ILogger SetupLogger(CommandOptions options)
+{
+    var loggerConfig = new LoggerConfiguration()
+        .WriteTo.Console();
+
+    if (!string.IsNullOrWhiteSpace(options.OutputFile))
+    {
+        loggerConfig = loggerConfig.WriteTo.File(options.OutputFile);
+    }
+
+    if (string.IsNullOrWhiteSpace(options.LogLevel))
+    {
+        loggerConfig = loggerConfig.MinimumLevel.Verbose();
+    }
+    else
+    {
+        loggerConfig = options.LogLevel.ToLower() switch
+        {
+            "verbose" => loggerConfig.MinimumLevel.Verbose(),
+            "info" => loggerConfig.MinimumLevel.Information(),
+            "warn" => loggerConfig.MinimumLevel.Warning(),
+            "error" => loggerConfig.MinimumLevel.Error(),
+            _ => loggerConfig.MinimumLevel.Verbose(),
+        };
+    }
+
+    Log.Logger = loggerConfig.CreateLogger();
+    return Log.Logger;
 }
 
 static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)

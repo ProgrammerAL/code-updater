@@ -28,6 +28,7 @@
 	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
 	  <PackageReference Include="ProgrammerAl.SourceGenerators.PublicInterfaceGenerator" Version="1.0.0.62" PrivateAssets="All" />
 	  <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+	  <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup>
