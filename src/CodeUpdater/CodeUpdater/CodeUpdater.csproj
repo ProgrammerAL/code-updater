@@ -22,6 +22,7 @@
 
 		<PackAsTool>true</PackAsTool>
 		<ToolCommandName>code-updater</ToolCommandName>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
