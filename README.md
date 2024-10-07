@@ -63,6 +63,9 @@ Below are the list of properties in the config file.
 - EnforceCodeStyleInBuild
   - Required
 	- Boolean value to set the `EnforceCodeStyleInBuild` csproj element to. If the `EnableNetAnalyzers` element does not exist in the project file, it will be added.
+- RunDotnetFormat
+  - Required
+  - True to run the `dotnet format` command on all csproj files
 - OutputFile
   - Optional
   - If this is set, it will be the file to write logs to, in addition to the console
@@ -80,7 +83,8 @@ Below are the list of properties in the config file.
   "DotNetTargetFramework": "net8.0",
   "DotNetLangVersion": "latest",
   "EnableNetAnalyzers": true,
-  "EnforceCodeStyleInBuild": true
+  "EnforceCodeStyleInBuild": true,
+  "RunDotnetFormat": true
 }
 ```
 	 
