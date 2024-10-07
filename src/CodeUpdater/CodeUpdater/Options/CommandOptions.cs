@@ -11,6 +11,6 @@ using CommandLine;
 namespace ProgrammerAL.Tools.CodeUpdater.Options;
 public class CommandOptions
 {
-    [Option(shortName: 'c', longName: "config-file", Required = true, HelpText = "Path to the file to use for config values when updating code")]
+    [Option(shortName: 'c', longName: "config", Required = true, HelpText = "Path to the file to use for config values when updating code")]
     public required string ConfigFile { get; set; }
 }

@@ -21,15 +21,15 @@ There are 2 ways to run this. As a .NET Tool installed on your machine, or downl
   - Install the tool globally by running `dotnet tool install --global ProgrammerAL.Tools.CodeUpdater --version 1.0.0`
   - Or clone this repository locally
 2. Run the application
-  - If you installed the tool, run it with the command: `code-updater --config-file "C:/my-repos/my-app-1"`
-  - If you downloaded the code, open a terminal to the `~/src/CodeUpdater/CodeUpdater` directory and run the application using dotnet run while passing in the required arguments. Example: `dotnet run -- --config-file "C:/my-repos/my-app-1"`
+  - If you installed the tool, run it with the command: `code-updater --config "C:/my-repos/my-app-1"`
+  - If you downloaded the code, open a terminal to the `~/src/CodeUpdater/CodeUpdater` directory and run the application using dotnet run while passing in the required arguments. Example: `dotnet run -- --config "C:/my-repos/my-app-1"`
 3. Wait for the application to finish. It will output the number of projects updated, and the number of projects that failed to update.
 4. Manually check a diff of all the file changes to ensure everything is as you expect
 5. Commit the code changes to source control. Wait for a CI/CD pipeline to run and ensure everything is still working as expected.
 
 ## CLI Options
 
-- `-d|--config-file`
+- `-d|--config`
 	- Required
 	- Path to the file to use for config values when updating code
 - `-h|--help`
