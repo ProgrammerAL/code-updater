@@ -57,6 +57,13 @@ public class UpdateOptions
     public required bool EnforceCodeStyleInBuild { get; set; }
 
     /// <summary>
+    /// Settings to use for configuring Nuget Audit settings in csproj files.
+    /// You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+    /// </summary>
+    [Required]
+    public required NugetAuditOptions NugetAudit { get; set; }
+
+    /// <summary>
     /// True to run the `dotnet format` command
     /// </summary>
     [Required]
@@ -71,4 +78,9 @@ public class UpdateOptions
     /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
     /// </summary>
     public string? LogLevel { get; set; } = "verbose";
+
+    public record NugetAuditOptions(
+        [property: Required] bool NuGetAudit, 
+        [property: Required] string AuditMode,
+        [property: Required] string AuditLevel);
 }

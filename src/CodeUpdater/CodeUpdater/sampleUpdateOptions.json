@@ -1,5 +1,5 @@
 {
-  "RootDirectory": "D:\\GitHub\\Purple-Spike\\arcade-machine-local-services\\src\\DeviceApp",
+  "RootDirectory": "C:\\GitHub\\ProgrammerAl\\ProgrammerAlSite",
   "IgnorePatterns": [],
   "NpmBuildCommand": "publish",
   "DotNetTargetFramework": "net8.0",
@@ -7,6 +7,11 @@
   "EnableNetAnalyzers": true,
   "EnforceCodeStyleInBuild": true,
   "RunDotnetFormat": true,
+  "NugetAudit": {
+    "NuGetAudit": true,
+    "AuditMode": "all",
+    "AuditLevel": "low"
+  },
   "OutputFile": "./code-updater-output.txt",
   "LogLevel": "Verbose"
 }

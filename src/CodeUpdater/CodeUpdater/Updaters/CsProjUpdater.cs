@@ -35,14 +35,38 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
             CsprojUpdateTracker.EnforceCodeStyleInBuild,
             UpdateOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
             addIfElementNotFound: true);
+        var nuGetAuditUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAudit,
+            UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditModeUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditMode,
+            UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditLevelUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditLevel,
+            UpdateOptions.NugetAudit.AuditLevel,
+            addIfElementNotFound: true);
 
         UpdateOrAddCsProjValues(
             csProjXmlDoc,
             propertyGroups,
-            targetFrameworkUpdates,
-            langUpdates,
-            enableNETAnalyzersUpdates,
-            enforceCodeStyleInBuildUpdates);
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
+            [
+                targetFrameworkUpdates,
+            ]),
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
+            [
+                langUpdates,
+                enableNETAnalyzersUpdates,
+                enforceCodeStyleInBuildUpdates,
+            ]),
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
+            [
+                nuGetAuditUpdates,
+                nugetAuditModeUpdates,
+                nugetAuditLevelUpdates
+            ]));
 
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
@@ -53,56 +77,60 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         return new CsProjUpdateResult(csProjFilePath, langVersionUpdateType, targetFrameworkUpdate);
     }
 
-    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, params CsprojUpdateTracker[] updates)
+    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, params CsprojUpdateGroupTracker[] updateGroups)
     {
-        foreach (var propertyGroupElement in propertyGroupsElements)
+        //Separate updates into groups
+        //  This way, when the groups are added to the csproj, they are grouped together to the same PropetyGroup
+        //  Not important for functional reasons, but it makes the csproj file easier to read
+        foreach (var group in updateGroups)
         {
-            foreach (var update in updates)
+            foreach (var propertyGroupElement in propertyGroupsElements)
             {
-                if (update.ElementName == CsprojUpdateTracker.TargetFramework)
+                foreach (var update in group.UpdateTrackers)
                 {
-                    UpdateTargetFrameworkValue(propertyGroupElement, update);
-                }
-                else
-                {
-                    UpdateCsprojValue(propertyGroupElement, update);
+                    if (update.ElementName == CsprojUpdateTracker.TargetFramework)
+                    {
+                        UpdateTargetFrameworkValue(propertyGroupElement, update);
+                    }
+                    else
+                    {
+                        UpdateCsprojValue(propertyGroupElement, update);
+                    }
                 }
             }
-        }
 
-        AddMissingElements(csProjXmlDoc, updates);
+            AddMissingElements(csProjXmlDoc, group);
+        }
     }
 
-    private void AddMissingElements(XDocument csProjXmlDoc, params CsprojUpdateTracker[] updates)
+    private void AddMissingElements(XDocument csProjXmlDoc, CsprojUpdateGroupTracker updateGroup)
     {
-        var updatesToMake = new List<CsprojUpdateTracker>();
-        foreach (var update in updates)
+        XElement? propertyGroupToAddTo = null;
+        if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup)
         {
-            if (update.ShouldAddElement())
-            {
-                updatesToMake.Add(update);
-            }
+            propertyGroupToAddTo = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
+        }
+        else if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup)
+        {
+            Logger.Information("Adding new PropertyGroup element for other required elements");
+            var newPropertyGroup = new XElement("PropertyGroup");
+            csProjXmlDoc.Root!.Add(newPropertyGroup);
+
+            propertyGroupToAddTo = newPropertyGroup;
         }
 
-        if (updatesToMake.Any())
+        //Add the trackers that haven't already set the final value
+        var toUpdate = updateGroup.UpdateTrackers.Where(x => !x.HasMadeRequiredUpdate()).ToImmutableArray();
+        if (propertyGroupToAddTo is not null
+            && toUpdate.Any())
         {
-            var propertyGroup = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
-            if (propertyGroup is null)
+            foreach (var trackers in toUpdate)
             {
-                Logger.Information("Adding new PropertyGroup element for other required elements");
-                var newPropertyGroup = new XElement("PropertyGroup");
-                csProjXmlDoc.Add(newPropertyGroup);
+                Logger.Information($"Adding {trackers.ElementName} element to csproj");
+                var newElement = new XElement(trackers.ElementName, trackers.NewValue);
+                propertyGroupToAddTo.Add(newElement);
 
-                propertyGroup = newPropertyGroup;
-            }
-
-            foreach (var elementToAdd in updatesToMake)
-            {
-                Logger.Information($"Adding {elementToAdd.ElementName} element to csproj");
-                var newElement = new XElement(elementToAdd.ElementName, elementToAdd.NewValue);
-                propertyGroup.Add(newElement);
-
-                elementToAdd.SetResults.Add(CsprojValueUpdateResultType.AddedElement);
+                trackers.SetResults.Add(CsprojValueUpdateResultType.AddedElement);
             }
         }
     }
@@ -197,6 +225,18 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         }
     }
 
+    private record CsprojUpdateGroupTracker(
+        CsprojUpdateGroupTracker.NotFoundActionType NotFoundAction,
+        IEnumerable<CsprojUpdateTracker> UpdateTrackers)
+    {
+        public enum NotFoundActionType
+        {
+            DoNothing,
+            AddElementToFirstPropertyGroup,
+            AddElementToNewPropertyGroup
+        }
+    }
+
     private class CsprojUpdateTracker
     {
         public const string TargetFramework = "TargetFramework";
@@ -204,6 +244,9 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         public const string LangVersion = "LangVersion";
         public const string EnableNETAnalyzers = "EnableNETAnalyzers";
         public const string EnforceCodeStyleInBuild = "EnforceCodeStyleInBuild";
+        public const string NuGetAudit = "NuGetAudit";
+        public const string NuGetAuditMode = "NuGetAuditMode";
+        public const string NuGetAuditLevel = "NuGetAuditLevel";
 
         public CsprojUpdateTracker(string elementName, string newValue, bool addIfElementNotFound)
             : this(elementName, newValue, addIfElementNotFound, ImmutableArray<string>.Empty)
@@ -242,9 +285,10 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
             return CsprojValueUpdateResultType.NotFound;
         }
 
-        public bool ShouldAddElement()
+        public bool HasMadeRequiredUpdate()
         {
-            return AddIfElementNotFound && SetResults.All(x => x == CsprojValueUpdateResultType.NotFound);
+            return SetResults.Any(x => x != CsprojValueUpdateResultType.NotFound
+                                    && x != CsprojValueUpdateResultType.Unknown);
         }
     }
 }

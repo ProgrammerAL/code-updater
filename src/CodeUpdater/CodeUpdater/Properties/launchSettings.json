@@ -2,7 +2,7 @@
   "profiles": {
     "CodeUpdater": {
       "commandName": "Project",
-      "commandLineArgs": "--config-file \"../../../sampleUpdateOptions.json"
+      "commandLineArgs": "--config \"../../../sampleUpdateOptions.json"
     }
   }
 }
