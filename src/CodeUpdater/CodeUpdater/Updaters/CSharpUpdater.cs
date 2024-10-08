@@ -40,8 +40,8 @@ public class CSharpUpdater
         {
             _logger.Information($"Updating '{csProjFilePath}'");
 
-            var nugetUpdates = await UpdateNugetPackagesAsync(csProjFilePath);
             var csProjUpdates = UpdateCsProjPropertyValues(csProjFilePath);
+            var nugetUpdates = await UpdateNugetPackagesAsync(csProjFilePath);
             var dotnetFormatUpdate = await RunDotnetFormatAsync(csProjFilePath);
 
             builder.Add(new CSharpUpdateResult(
