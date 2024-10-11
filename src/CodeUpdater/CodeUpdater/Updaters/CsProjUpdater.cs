@@ -105,6 +105,13 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 
     private void AddMissingElements(XDocument csProjXmlDoc, CsprojUpdateGroupTracker updateGroup)
     {
+        var toUpdate = updateGroup.UpdateTrackers.Where(x => !x.HasMadeRequiredUpdate()).ToImmutableArray();
+
+        if (!toUpdate.Any())
+        {
+            return;
+        }
+
         XElement? propertyGroupToAddTo = null;
         if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup)
         {
@@ -113,16 +120,12 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         else if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup)
         {
             Logger.Information("Adding new PropertyGroup element for other required elements");
-            var newPropertyGroup = new XElement("PropertyGroup");
-            csProjXmlDoc.Root!.Add(newPropertyGroup);
-
-            propertyGroupToAddTo = newPropertyGroup;
+            propertyGroupToAddTo = new XElement("PropertyGroup");
+            csProjXmlDoc.Root!.Add(propertyGroupToAddTo);
         }
 
         //Add the trackers that haven't already set the final value
-        var toUpdate = updateGroup.UpdateTrackers.Where(x => !x.HasMadeRequiredUpdate()).ToImmutableArray();
-        if (propertyGroupToAddTo is not null
-            && toUpdate.Any())
+        if (propertyGroupToAddTo is not null)
         {
             foreach (var trackers in toUpdate)
             {
