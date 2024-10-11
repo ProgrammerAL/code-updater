@@ -66,6 +66,15 @@ Below are the list of properties in the config file.
 - RunDotnetFormat
   - Required
   - True to run the `dotnet format` command on all csproj files
+- NugetAudit
+  - Required
+  - This is an object with 3 properties, each is required. For more information see the Microsoft documentation at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+    - NuGetAudit
+      - Boolean to enable/disable the NuGet Audit features. Note that even if this is set to false, you still need to provide values for the other 2 properties even though they won't be used.
+    - AuditMode
+      - String. Which mode to audit, `direct` dependencies, or `all` dependencies.
+    - AuditLevel
+      - String. Minimum severity level to report. Ex: If you set it to moderate, you get `moderate`, `high`, and `critical` advisories. If you set it to `low`, you get all advisories.
 - OutputFile
   - Optional
   - If this is set, it will be the file to write logs to, in addition to the console
@@ -77,14 +86,21 @@ Below are the list of properties in the config file.
 
 ```json
 {
-  "RootDirectory": "C:/my-repos/my-app-1",
+  "RootDirectory": "C:\\GitHub\\ProgrammerAl\\ProgrammerAlSite",
   "IgnorePatterns": [],
   "NpmBuildCommand": "publish",
   "DotNetTargetFramework": "net8.0",
   "DotNetLangVersion": "latest",
   "EnableNetAnalyzers": true,
   "EnforceCodeStyleInBuild": true,
-  "RunDotnetFormat": true
+  "RunDotnetFormat": true,
+  "NugetAudit": {
+    "NuGetAudit": true,
+    "AuditMode": "all",
+    "AuditLevel": "low"
+  },
+  "OutputFile": "./code-updater-output.txt",
+  "LogLevel": "Verbose"
 }
 ```
 	 

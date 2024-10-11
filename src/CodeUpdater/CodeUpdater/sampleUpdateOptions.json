@@ -1,5 +1,5 @@
 {
-  "RootDirectory": "C:\\GitHub\\ProgrammerAl\\ProgrammerAlSite",
+  "RootDirectory": "C:/my-repos/my-app-1",
   "IgnorePatterns": [],
   "NpmBuildCommand": "publish",
   "DotNetTargetFramework": "net8.0",
