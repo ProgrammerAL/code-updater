@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace ProgrammerAL.Tools.CodeUpdater;
 
 public record CSharpUpdateResult(
-    string CsprojFile, 
-    NugetUpdateResults NugetUpdates, 
-    CsprojValueUpdateResultType LangVersionUpdate, 
+    string CsprojFile,
+    NugetUpdateResults NugetUpdates,
+    CsprojValueUpdateResultType LangVersionUpdate,
     CsprojValueUpdateResultType TargetFrameworkUpdate,
     DotnetFormatResult DotnetFormatUpdate);
 

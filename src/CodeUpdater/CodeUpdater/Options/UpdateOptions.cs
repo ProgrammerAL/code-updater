@@ -80,7 +80,7 @@ public class UpdateOptions
     public string? LogLevel { get; set; } = "verbose";
 
     public record NugetAuditOptions(
-        [property: Required] bool NuGetAudit, 
+        [property: Required] bool NuGetAudit,
         [property: Required] string AuditMode,
         [property: Required] string AuditLevel);
 }
