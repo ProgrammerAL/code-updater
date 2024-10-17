@@ -18,35 +18,6 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
-        var targetFrameworkUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.TargetFramework,
-            UpdateOptions.DotNetTargetFramework,
-            addIfElementNotFound: false,
-            skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
-        var langUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.LangVersion,
-            UpdateOptions.DotNetLangVersion,
-            addIfElementNotFound: true);
-        var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.EnableNETAnalyzers,
-            UpdateOptions.EnableNetAnalyzers.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.EnforceCodeStyleInBuild,
-            UpdateOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var nuGetAuditUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAudit,
-            UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var nugetAuditModeUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAuditMode,
-            UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var nugetAuditLevelUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAuditLevel,
-            UpdateOptions.NugetAudit.AuditLevel,
-            addIfElementNotFound: true);
 
         UpdateOrAddCsProjValues(
             csProjXmlDoc,
@@ -75,6 +46,78 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         var langVersionUpdateType = langUpdates.GetFinalResult();
         var targetFrameworkUpdate = targetFrameworkUpdates.GetFinalResult();
         return new CsProjUpdateResult(csProjFilePath, langVersionUpdateType, targetFrameworkUpdate);
+    }
+
+    private ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> DetermineProjectUpdateGroups()
+    {
+        var buidler = ImmutableArray.CreateBuilder<ImmutableArray<CsprojUpdateGroupTracker>>();
+
+        if (UpdateOptions.DotNetVersioningOptions is object)
+        {
+            var targetFrameworkUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.TargetFramework,
+                UpdateOptions.DotNetVersioningOptions.DotNetTargetFramework,
+                addIfElementNotFound: false,
+                skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
+
+            var langUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.LangVersion,
+                UpdateOptions.DotNetVersioningOptions.DotNetLangVersion,
+                addIfElementNotFound: true);
+
+            var warningsAsErrorsUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.TreatWarningsAsErrors,
+                UpdateOptions.DotNetVersioningOptions.TreatWarningsAsErrors.ToString().ToLower(),
+                addIfElementNotFound: true);
+
+            var theseBuilder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+
+            theseBuilder.Add(
+                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
+                [
+                    targetFrameworkUpdates,
+                ]));
+
+            theseBuilder.Add(
+                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
+                [
+                    langUpdates,
+                    warningsAsErrorsUpdates,
+                ]));
+
+            buidler.Add(theseBuilder.ToImmutableArray());
+        }
+        
+        if (UpdateOptions.DotNetAnalyzerOptions is object)
+        {
+            var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.EnableNETAnalyzers,
+            UpdateOptions.DotNetAnalyzerOptions.EnableNetAnalyzers.ToString().ToLower(),
+            addIfElementNotFound: true);
+
+            var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.EnforceCodeStyleInBuild,
+                UpdateOptions.DotNetAnalyzerOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
+                addIfElementNotFound: true);
+
+            var theseBuilder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+        }
+
+        var nuGetAuditUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAudit,
+            UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditModeUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditMode,
+            UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditLevelUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditLevel,
+            UpdateOptions.NugetAudit.AuditLevel,
+            addIfElementNotFound: true);
+
+
+        return buidler.ToImmutableArray();
     }
 
     private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, params CsprojUpdateGroupTracker[] updateGroups)
@@ -245,6 +288,7 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         public const string TargetFramework = "TargetFramework";
         public const string TargetFrameworks = "TargetFrameworks";
         public const string LangVersion = "LangVersion";
+        public const string TreatWarningsAsErrors = "TreatWarningsAsErrors";
         public const string EnableNETAnalyzers = "EnableNETAnalyzers";
         public const string EnforceCodeStyleInBuild = "EnforceCodeStyleInBuild";
         public const string NuGetAudit = "NuGetAudit";

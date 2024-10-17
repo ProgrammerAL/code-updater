@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ProgrammerAL.Tools.CodeUpdater;
+
 public class UpdateOptions
 {
     /// <summary>
@@ -32,29 +33,9 @@ public class UpdateOptions
     [Required(AllowEmptyStrings = false)]
     public required string NpmBuildCommand { get; set; }
 
-    /// <summary>
-    /// Target Framework to set in all *.CsProj files
-    /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string DotNetTargetFramework { get; set; }
+    public DotNetVersioningOptions? DotNetVersioningOptions { get; set; }
 
-    /// <summary>
-    /// C# language version to set in all *.CsProj files
-    /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string DotNetLangVersion { get; set; }
-
-    /// <summary>
-    /// True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
-    /// </summary>
-    [Required]
-    public required bool EnableNetAnalyzers { get; set; }
-
-    /// <summary>
-    /// True to set the `EnforceCodeStyleInBuild` csproj value to true, false to set it to false
-    /// </summary>
-    [Required]
-    public required bool EnforceCodeStyleInBuild { get; set; }
+    public DotNetAnalyzerOptions? DotNetAnalyzerOptions { get; set; }
 
     /// <summary>
     /// Settings to use for configuring Nuget Audit settings in csproj files.
@@ -83,4 +64,40 @@ public class UpdateOptions
         [property: Required] bool NuGetAudit,
         [property: Required] string AuditMode,
         [property: Required] string AuditLevel);
+}
+
+public class DotNetVersioningOptions
+{
+    /// <summary>
+    /// Target Framework to set in all *.csproj files
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public required string DotNetTargetFramework { get; set; }
+
+    /// <summary>
+    /// C# language version to set in all *.csproj files
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public required string DotNetLangVersion { get; set; }
+
+    /// <summary>
+    /// The value to set for the TreatWarningsAsErrors flag in all *.csproj files
+    /// </summary>
+    [Required]
+    public required bool TreatWarningsAsErrors { get; set; }
+}
+
+public class DotNetAnalyzerOptions
+{
+    /// <summary>
+    /// True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
+    /// </summary>
+    [Required]
+    public required bool EnableNetAnalyzers { get; set; }
+
+    /// <summary>
+    /// True to set the `EnforceCodeStyleInBuild` csproj value to true, false to set it to false
+    /// </summary>
+    [Required]
+    public required bool EnforceCodeStyleInBuild { get; set; }
 }

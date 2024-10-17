@@ -2,10 +2,15 @@
   "RootDirectory": "C:/my-repos/my-app-1",
   "IgnorePatterns": [],
   "NpmBuildCommand": "publish",
-  "DotNetTargetFramework": "net8.0",
-  "DotNetLangVersion": "latest",
-  "EnableNetAnalyzers": true,
-  "EnforceCodeStyleInBuild": true,
+  "DotNetVersioningOptions": {
+    "TreatWarningsAsErrors": true,
+    "DotNetTargetFramework": "net8.0",
+    "DotNetLangVersion": "latest"
+  },
+  "DotNetAnalyzerOptions": {
+    "EnableNetAnalyzers": true,
+    "EnforceCodeStyleInBuild": true
+  },
   "RunDotnetFormat": true,
   "NugetAudit": {
     "NuGetAudit": true,
