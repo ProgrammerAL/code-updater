@@ -41,8 +41,7 @@ public class UpdateOptions
     /// Settings to use for configuring Nuget Audit settings in csproj files.
     /// You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
     /// </summary>
-    [Required]
-    public required NugetAuditOptions NugetAudit { get; set; }
+    public NugetAuditOptions? NugetAudit { get; set; }
 
     /// <summary>
     /// True to run the `dotnet format` command
@@ -59,11 +58,6 @@ public class UpdateOptions
     /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
     /// </summary>
     public string? LogLevel { get; set; } = "verbose";
-
-    public record NugetAuditOptions(
-        [property: Required] bool NuGetAudit,
-        [property: Required] string AuditMode,
-        [property: Required] string AuditLevel);
 }
 
 public class DotNetVersioningOptions
@@ -100,4 +94,25 @@ public class DotNetAnalyzerOptions
     /// </summary>
     [Required]
     public required bool EnforceCodeStyleInBuild { get; set; }
+}
+
+public class NugetAuditOptions
+{
+    /// <summary>
+    /// What value to set for the `NuGetAudit` property in the csproj file.
+    /// </summary>
+    [Required]
+    public required bool NuGetAudit { get; set; }
+
+    /// <summary>
+    /// What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.
+    /// </summary>
+    [Required]
+    public required string AuditMode { get; set; }
+
+    /// <summary>
+    /// What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
+    /// </summary>
+    [Required]
+    public required string AuditLevel { get; set; }
 }

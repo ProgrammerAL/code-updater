@@ -10,14 +10,14 @@ namespace ProgrammerAL.Tools.CodeUpdater;
 public record CSharpUpdateResult(
     string CsprojFile,
     NugetUpdateResults NugetUpdates,
-    CsprojValueUpdateResultType LangVersionUpdate,
-    CsprojValueUpdateResultType TargetFrameworkUpdate,
+    CsprojValueUpdateResultType? LangVersionUpdate,
+    CsprojValueUpdateResultType? TargetFrameworkUpdate,
     DotnetFormatResult DotnetFormatUpdate);
 
 public record NugetUpdateResults(bool RetrievedPackageListSuccessfully, ImmutableArray<NugetUpdateResult> Updates);
 public record NugetUpdateResult(string CsProjFile, string PackageId, bool UpdatedSuccessfully);
 
-public record CsProjUpdateResult(string CsProjFile, CsprojValueUpdateResultType LangVersionUpdate, CsprojValueUpdateResultType TargetFrameworkUpdate);
+public record CsProjUpdateResult(string CsProjFile, CsprojValueUpdateResultType? LangVersionUpdate, CsprojValueUpdateResultType? TargetFrameworkUpdate);
 public record DotnetFormatResult(string CsProjFile, DotnetFormatResultType Result);
 
 public record NpmUpdates(ImmutableArray<string> NpmDirectories);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,40 +19,83 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
 
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
+        var projectUpdateGroups = DetermineProjectUpdateGroups();
 
         UpdateOrAddCsProjValues(
             csProjXmlDoc,
             propertyGroups,
-            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
-            [
-                targetFrameworkUpdates,
-            ]),
-            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
-            [
-                langUpdates,
-                enableNETAnalyzersUpdates,
-                enforceCodeStyleInBuildUpdates,
-            ]),
-            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
-            [
-                nuGetAuditUpdates,
-                nugetAuditModeUpdates,
-                nugetAuditLevelUpdates
-            ]));
+            projectUpdateGroups);
 
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
         File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), Encoding.UTF8);
 
-        var langVersionUpdateType = langUpdates.GetFinalResult();
-        var targetFrameworkUpdate = targetFrameworkUpdates.GetFinalResult();
+        var langUpdates = projectUpdateGroups.SelectMany(x => x).SelectMany(x => x.UpdateTrackers).FirstOrDefault(x => x.ElementName == CsprojUpdateTracker.LangVersion);
+        var targetFrameworkUpdates = projectUpdateGroups.SelectMany(x => x).SelectMany(x => x.UpdateTrackers).FirstOrDefault(x => x.ElementName == CsprojUpdateTracker.TargetFramework);
+
+        var langVersionUpdateType = langUpdates?.GetFinalResult();
+        var targetFrameworkUpdate = targetFrameworkUpdates?.GetFinalResult();
         return new CsProjUpdateResult(csProjFilePath, langVersionUpdateType, targetFrameworkUpdate);
     }
 
     private ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> DetermineProjectUpdateGroups()
     {
-        var buidler = ImmutableArray.CreateBuilder<ImmutableArray<CsprojUpdateGroupTracker>>();
+        var builder = ImmutableArray.CreateBuilder<ImmutableArray<CsprojUpdateGroupTracker>>();
 
+        var dotNetVersioningUpdates = GenerateUpdateGroupForDotNetVersioning();
+        if (dotNetVersioningUpdates.Any())
+        {
+            builder.Add(dotNetVersioningUpdates);
+        }
+
+        var dotNetAnalyzerUpdates = GenerateUpdateGroupForDotNetAnalyzers();
+        if (dotNetAnalyzerUpdates.Any())
+        {
+            builder.Add(dotNetAnalyzerUpdates);
+        }
+
+        var nugetAuditUpdates = GenerateUpdateGroupForNugetAudit();
+
+        if (nugetAuditUpdates.Any())
+        {
+            builder.Add(nugetAuditUpdates);
+        }
+
+        return builder.ToImmutableArray();
+    }
+
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForNugetAudit()
+    {
+        if (UpdateOptions.NugetAudit is object)
+        {
+            var nuGetAuditUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.NuGetAudit,
+                UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
+                addIfElementNotFound: true);
+            var nugetAuditModeUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.NuGetAuditMode,
+                UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
+                addIfElementNotFound: true);
+            var nugetAuditLevelUpdates = new CsprojUpdateTracker(
+                CsprojUpdateTracker.NuGetAuditLevel,
+                UpdateOptions.NugetAudit.AuditLevel,
+                addIfElementNotFound: true);
+
+            var nugetUpdatesGroup = new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
+            [
+                nuGetAuditUpdates,
+                nugetAuditModeUpdates,
+                nugetAuditLevelUpdates
+            ]);
+
+            return [nugetUpdatesGroup];
+        }
+
+        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
+    }
+
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetVersioning()
+    {
         if (UpdateOptions.DotNetVersioningOptions is object)
         {
             var targetFrameworkUpdates = new CsprojUpdateTracker(
@@ -70,24 +114,29 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
                 UpdateOptions.DotNetVersioningOptions.TreatWarningsAsErrors.ToString().ToLower(),
                 addIfElementNotFound: true);
 
-            var theseBuilder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+            var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
 
-            theseBuilder.Add(
+            builder.Add(
                 new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
                 [
                     targetFrameworkUpdates,
                 ]));
 
-            theseBuilder.Add(
+            builder.Add(
                 new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
                 [
                     langUpdates,
                     warningsAsErrorsUpdates,
                 ]));
 
-            buidler.Add(theseBuilder.ToImmutableArray());
+            return builder.ToImmutableArray();
         }
-        
+
+        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
+    }
+
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetAnalyzers()
+    {
         if (UpdateOptions.DotNetAnalyzerOptions is object)
         {
             var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
@@ -100,49 +149,47 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
                 UpdateOptions.DotNetAnalyzerOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
                 addIfElementNotFound: true);
 
-            var theseBuilder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+            var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+
+            builder.Add(
+                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
+                [
+                    enableNETAnalyzersUpdates,
+                    enforceCodeStyleInBuildUpdates
+                ]));
+
+            return builder.ToImmutableArray();
         }
 
-        var nuGetAuditUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAudit,
-            UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var nugetAuditModeUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAuditMode,
-            UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
-            addIfElementNotFound: true);
-        var nugetAuditLevelUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.NuGetAuditLevel,
-            UpdateOptions.NugetAudit.AuditLevel,
-            addIfElementNotFound: true);
-
-
-        return buidler.ToImmutableArray();
+        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
     }
 
-    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, params CsprojUpdateGroupTracker[] updateGroups)
+    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> updateGroups)
     {
         //Separate updates into groups
         //  This way, when the groups are added to the csproj, they are grouped together to the same PropetyGroup
         //  Not important for functional reasons, but it makes the csproj file easier to read
-        foreach (var group in updateGroups)
+        foreach (var trackerGroup in updateGroups)
         {
-            foreach (var propertyGroupElement in propertyGroupsElements)
+            foreach (var tracker in trackerGroup)
             {
-                foreach (var update in group.UpdateTrackers)
+                foreach (var update in tracker.UpdateTrackers)
                 {
-                    if (update.ElementName == CsprojUpdateTracker.TargetFramework)
+                    foreach (var propertyGroupElement in propertyGroupsElements)
                     {
-                        UpdateTargetFrameworkValue(propertyGroupElement, update);
-                    }
-                    else
-                    {
-                        UpdateCsprojValue(propertyGroupElement, update);
+                        if (update.ElementName == CsprojUpdateTracker.TargetFramework)
+                        {
+                            UpdateTargetFrameworkValue(propertyGroupElement, update);
+                        }
+                        else
+                        {
+                            UpdateCsprojValue(propertyGroupElement, update);
+                        }
                     }
                 }
-            }
 
-            AddMissingElements(csProjXmlDoc, group);
+                AddMissingElements(csProjXmlDoc, tracker);
+            }
         }
     }
 
