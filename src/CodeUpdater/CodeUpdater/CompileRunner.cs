@@ -13,10 +13,16 @@ using Serilog;
 namespace ProgrammerAL.Tools.CodeUpdater;
 public class CompileRunner(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
-    public async ValueTask<CompileResults> CompileProjectsAsync(UpdateWork updateWork, string npmBuildCommand)
+    public async ValueTask<CompileResults> CompileProjectsAsync(UpdateWork updateWork, UpdateOptions updateOptions)
     {
         var csharpBuildResults = await CompileAllCSharpProjectsAsync(updateWork);
-        var npmDirectoryBuildResults = await BuildAllNpmDirectoriesAsync(updateWork, npmBuildCommand);
+
+        var npmBuildCommand = updateOptions.NpmOptions?.NpmBuildCommand;
+        var npmDirectoryBuildResults = new CompileNpmDirectoryResults(ImmutableArray<CompileNpmDirectoryResult>.Empty);
+        if (!string.IsNullOrWhiteSpace(npmBuildCommand))
+        {
+            npmDirectoryBuildResults = await BuildAllNpmDirectoriesAsync(updateWork, npmBuildCommand);
+        }
 
         return new CompileResults(csharpBuildResults, npmDirectoryBuildResults);
     }

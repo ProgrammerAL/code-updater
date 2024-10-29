@@ -1,11 +1,5 @@
 ﻿
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProgrammerAL.Tools.CodeUpdater;
 
@@ -28,14 +22,46 @@ public class UpdateOptions
     public required IEnumerable<string> IgnorePatterns { get; set; }
 
     /// <summary>
-    /// Npm command to run to \"compile\" the npm directory. Format run is: npm run <NpmBuildCommand>.
+    /// Options for updating C# projects and code
+    /// </summary>
+    public CSharpOptions? CSharpOptions { get; set; }
+
+    /// <summary>
+    /// Options for updating Npm packages
+    /// </summary>
+    public NpmOptions? NpmOptions { get; set; }
+
+    /// <summary>
+    /// Options for output logging of the operation
+    /// </summary>
+    public LoggingOptions? LoggingOptions { get; set; }
+}
+
+public class NpmOptions
+{
+    /// <summary>
+    /// Npm command to \"compile\" the npm directory. Format run is: npm run <NpmBuildCommand>.
     /// </summary>
     [Required(AllowEmptyStrings = false)]
     public required string NpmBuildCommand { get; set; }
+}
 
-    public DotNetVersioningOptions? DotNetVersioningOptions { get; set; }
+public class CSharpOptions
+{
+    /// <summary>
+    /// Versioning options for csproj files
+    /// </summary>
+    public CsProjVersioningOptions? CsProjVersioningOptions { get; set; }
 
-    public DotNetAnalyzerOptions? DotNetAnalyzerOptions { get; set; }
+    /// <summary>
+    /// Analyzers that are set in the csproj files
+    /// </summary>
+    public CsProjDotNetAnalyzerOptions? CsProjDotNetAnalyzerOptions { get; set; }
+
+    /// <summary>
+    /// Options for any code styling updates that will be performed over C# code
+    /// </summary>
+    public CSharpStyleOptions? CSharpStyleOptions { get; set; }
 
     /// <summary>
     /// Settings to use for configuring Nuget Audit settings in csproj files.
@@ -44,35 +70,24 @@ public class UpdateOptions
     public NugetAuditOptions? NugetAudit { get; set; }
 
     /// <summary>
-    /// True to run the `dotnet format` command
+    /// Settings to use for updating NuGet packages in csproj files
     /// </summary>
-    [Required]
-    public required bool RunDotnetFormat { get; set; }
-
-    /// <summary>
-    /// If this is set, it will be the file to write logs to, in addition to the console
-    /// </summary>
-    public string? OutputFile { get; set; }
-
-    /// <summary>
-    /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
-    /// </summary>
-    public string? LogLevel { get; set; } = "verbose";
+    public NuGetUpdateOptions? NuGetUpdates { get; set; }
 }
 
-public class DotNetVersioningOptions
+public class CsProjVersioningOptions
 {
     /// <summary>
     /// Target Framework to set in all *.csproj files
     /// </summary>
     [Required(AllowEmptyStrings = false)]
-    public required string DotNetTargetFramework { get; set; }
+    public required string TargetFramework { get; set; }
 
     /// <summary>
     /// C# language version to set in all *.csproj files
     /// </summary>
     [Required(AllowEmptyStrings = false)]
-    public required string DotNetLangVersion { get; set; }
+    public required string LangVersion { get; set; }
 
     /// <summary>
     /// The value to set for the TreatWarningsAsErrors flag in all *.csproj files
@@ -81,7 +96,7 @@ public class DotNetVersioningOptions
     public required bool TreatWarningsAsErrors { get; set; }
 }
 
-public class DotNetAnalyzerOptions
+public class CsProjDotNetAnalyzerOptions
 {
     /// <summary>
     /// True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
@@ -96,6 +111,15 @@ public class DotNetAnalyzerOptions
     public required bool EnforceCodeStyleInBuild { get; set; }
 }
 
+public class CSharpStyleOptions
+{
+    /// <summary>
+    /// True to run the `dotnet format` command
+    /// </summary>
+    [Required]
+    public required bool RunDotnetFormat { get; set; }
+}
+
 public class NugetAuditOptions
 {
     /// <summary>
@@ -107,12 +131,42 @@ public class NugetAuditOptions
     /// <summary>
     /// What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = false)]
     public required string AuditMode { get; set; }
 
     /// <summary>
     /// What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = false)]
     public required string AuditLevel { get; set; }
+}
+
+public class NuGetUpdateOptions
+{
+    /// <summary>
+    /// True to updates all referenced nugets to the latest version. These are the references in the csproj files.
+    /// </summary>
+    [Required]
+    public bool UpdateTopLevelNugetsInCsProj { get; set; }
+
+    /// <summary>
+    /// True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
+    /// </summary>
+    [Required]
+    public bool UpdateTopLevelNugetsNotInCsProj { get; set; }
+}
+
+public class LoggingOptions
+{
+    /// <summary>
+    /// If this is set, it will be the file to write logs to, in addition to the console
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public required string OutputFile { get; set; }
+
+    /// <summary>
+    /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public required string LogLevel { get; set; } = "verbose";
 }

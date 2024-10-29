@@ -49,7 +49,7 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     //After updating everything, compile all projects
     //  Don't do this in the above loop in case a project needs an update that would cause it to not compile
     //  So wait for all projects to be updated
-    var compileResults = await compileRunner.CompileProjectsAsync(updateWork, updateOptions.NpmBuildCommand);
+    var compileResults = await compileRunner.CompileProjectsAsync(updateWork, updateOptions);
 
     OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, logger);
 }
@@ -59,25 +59,28 @@ static ILogger SetupLogger(UpdateOptions updateOptions)
     var loggerConfig = new LoggerConfiguration()
         .WriteTo.Console();
 
-    if (!string.IsNullOrWhiteSpace(updateOptions.OutputFile))
+    if (updateOptions.LoggingOptions is object)
     {
-        loggerConfig = loggerConfig.WriteTo.File(updateOptions.OutputFile);
-    }
-
-    if (string.IsNullOrWhiteSpace(updateOptions.LogLevel))
-    {
-        loggerConfig = loggerConfig.MinimumLevel.Verbose();
-    }
-    else
-    {
-        loggerConfig = updateOptions.LogLevel.ToLower() switch
+        if (!string.IsNullOrWhiteSpace(updateOptions.LoggingOptions.OutputFile))
         {
-            "verbose" => loggerConfig.MinimumLevel.Verbose(),
-            "info" => loggerConfig.MinimumLevel.Information(),
-            "warn" => loggerConfig.MinimumLevel.Warning(),
-            "error" => loggerConfig.MinimumLevel.Error(),
-            _ => loggerConfig.MinimumLevel.Verbose(),
-        };
+            loggerConfig = loggerConfig.WriteTo.File(updateOptions.LoggingOptions.OutputFile);
+        }
+
+        if (string.IsNullOrWhiteSpace(updateOptions.LoggingOptions.LogLevel))
+        {
+            loggerConfig = loggerConfig.MinimumLevel.Verbose();
+        }
+        else
+        {
+            loggerConfig = updateOptions.LoggingOptions.LogLevel.ToLower() switch
+            {
+                "verbose" => loggerConfig.MinimumLevel.Verbose(),
+                "info" => loggerConfig.MinimumLevel.Information(),
+                "warn" => loggerConfig.MinimumLevel.Warning(),
+                "error" => loggerConfig.MinimumLevel.Error(),
+                _ => loggerConfig.MinimumLevel.Verbose(),
+            };
+        }
     }
 
     Log.Logger = loggerConfig.CreateLogger();

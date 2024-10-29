@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Collections.Immutable;
 
 using ProgrammerAL.Tools.CodeUpdater.Helpers;
-using ProgrammerAL.Tools.CodeUpdater.Options;
 
 using Serilog;
 
@@ -29,20 +25,26 @@ public class CSharpUpdater
         _runProcessHelper = runProcessHelper;
         _updateOptions = updateOptions;
         _nugetUpdater = new NugetUpdater(_logger, _runProcessHelper);
-        _csProjUpdater = new CsProjUpdater(_logger, updateOptions);
-        _csCodeUpdater = new CsCodeUpdater(_logger, _runProcessHelper, updateOptions);
+        _csProjUpdater = new CsProjUpdater(_logger);
+        _csCodeUpdater = new CsCodeUpdater(_logger, _runProcessHelper);
     }
 
     public async ValueTask<ImmutableArray<CSharpUpdateResult>> UpdateAllCSharpProjectsAsync(UpdateWork updateWork)
     {
+        if (_updateOptions.CSharpOptions is null)
+        {
+            _logger.Information("No C# options provided, skipping C# updates");
+            return ImmutableArray<CSharpUpdateResult>.Empty;
+        }
+
         var builder = ImmutableArray.CreateBuilder<CSharpUpdateResult>();
         foreach (var csProjFilePath in updateWork.CsProjectFiles)
         {
             _logger.Information($"Updating '{csProjFilePath}'");
 
-            var csProjUpdates = UpdateCsProjPropertyValues(csProjFilePath);
-            var nugetUpdates = await UpdateNugetPackagesAsync(csProjFilePath);
-            var dotnetFormatUpdate = await RunDotnetFormatAsync(csProjFilePath);
+            var csProjUpdates = UpdateCsProjPropertyValues(csProjFilePath, _updateOptions.CSharpOptions);
+            var dotnetFormatUpdate = await RunDotnetFormatAsync(csProjFilePath, _updateOptions.CSharpOptions);
+            var nugetUpdates = await UpdateNugetPackagesAsync(csProjFilePath, _updateOptions.CSharpOptions);
 
             builder.Add(new CSharpUpdateResult(
                 csProjFilePath,
@@ -55,11 +57,17 @@ public class CSharpUpdater
         return builder.ToImmutableArray();
     }
 
-    private async ValueTask<NugetUpdateResults> UpdateNugetPackagesAsync(string csProjFilePath)
+    private async ValueTask<NugetUpdateResults> UpdateNugetPackagesAsync(string csProjFilePath, CSharpOptions cSharpOptions)
     {
         try
         {
-            return await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath);
+            if (cSharpOptions.NuGetUpdates is null)
+            {
+                _logger.Information("No NuGet options provided, skipping NuGet updates");
+                return new NugetUpdateResults(RetrievedPackageListSuccessfully: true, ImmutableArray<NugetUpdateResult>.Empty);
+            }
+
+            return await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath, cSharpOptions.NuGetUpdates);
         }
         catch (Exception ex)
         {
@@ -68,11 +76,13 @@ public class CSharpUpdater
         }
     }
 
-    private CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath)
+    private CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath, CSharpOptions cSharpOptions)
     {
         try
         {
-            return _csProjUpdater.UpdateCsProjPropertyValues(csProjFilePath);
+            return _csProjUpdater.UpdateCsProjPropertyValues(
+                csProjFilePath,
+                cSharpOptions);
         }
         catch (Exception ex)
         {
@@ -81,11 +91,17 @@ public class CSharpUpdater
         }
     }
 
-    private async Task<DotnetFormatResult> RunDotnetFormatAsync(string csProjFilePath)
+    private async Task<DotnetFormatResult> RunDotnetFormatAsync(string csProjFilePath, CSharpOptions cSharpOptions)
     {
         try
         {
-            return await _csCodeUpdater.RunDotnetFormatAsync(csProjFilePath);
+            if (cSharpOptions.CSharpStyleOptions is null)
+            { 
+                _logger.Information("No C# style options provided, skipping dotnet format");
+                return new DotnetFormatResult(csProjFilePath, DotnetFormatResultType.DidNotRun);
+            }
+
+            return await _csCodeUpdater.RunDotnetFormatAsync(csProjFilePath, cSharpOptions.CSharpStyleOptions);
         }
         catch (Exception ex)
         {

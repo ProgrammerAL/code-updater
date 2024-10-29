@@ -11,15 +11,15 @@ using Serilog;
 
 namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 
-public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
+public class CsProjUpdater(ILogger Logger)
 {
-    public CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath)
+    public CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath, CSharpOptions cSharpOptions)
     {
         var csProjXmlDoc = XDocument.Load(csProjFilePath, LoadOptions.PreserveWhitespace);
 
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
-        var projectUpdateGroups = DetermineProjectUpdateGroups();
+        var projectUpdateGroups = DetermineProjectUpdateGroups(cSharpOptions);
 
         UpdateOrAddCsProjValues(
             csProjXmlDoc,
@@ -38,130 +38,124 @@ public class CsProjUpdater(ILogger Logger, UpdateOptions UpdateOptions)
         return new CsProjUpdateResult(csProjFilePath, langVersionUpdateType, targetFrameworkUpdate);
     }
 
-    private ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> DetermineProjectUpdateGroups()
+    private ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> DetermineProjectUpdateGroups(CSharpOptions cSharpOptions)
     {
         var builder = ImmutableArray.CreateBuilder<ImmutableArray<CsprojUpdateGroupTracker>>();
 
-        var dotNetVersioningUpdates = GenerateUpdateGroupForDotNetVersioning();
-        if (dotNetVersioningUpdates.Any())
+        if (cSharpOptions.CsProjVersioningOptions is object)
         {
-            builder.Add(dotNetVersioningUpdates);
+            var dotNetVersioningUpdates = GenerateUpdateGroupForDotNetVersioning(cSharpOptions.CsProjVersioningOptions);
+            if (dotNetVersioningUpdates.Any())
+            {
+                builder.Add(dotNetVersioningUpdates);
+            }
         }
 
-        var dotNetAnalyzerUpdates = GenerateUpdateGroupForDotNetAnalyzers();
-        if (dotNetAnalyzerUpdates.Any())
+        if (cSharpOptions.CsProjDotNetAnalyzerOptions is object)
         {
-            builder.Add(dotNetAnalyzerUpdates);
+            var dotNetAnalyzerUpdates = GenerateUpdateGroupForDotNetAnalyzers(cSharpOptions.CsProjDotNetAnalyzerOptions);
+            if (dotNetAnalyzerUpdates.Any())
+            {
+                builder.Add(dotNetAnalyzerUpdates);
+            }
         }
 
-        var nugetAuditUpdates = GenerateUpdateGroupForNugetAudit();
-
-        if (nugetAuditUpdates.Any())
+        if (cSharpOptions.NugetAudit is object)
         {
-            builder.Add(nugetAuditUpdates);
+            var nugetAuditUpdates = GenerateUpdateGroupForNugetAudit(cSharpOptions.NugetAudit);
+
+            if (nugetAuditUpdates.Any())
+            {
+                builder.Add(nugetAuditUpdates);
+            }
         }
 
         return builder.ToImmutableArray();
     }
 
-    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForNugetAudit()
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForNugetAudit(NugetAuditOptions nugetAudit)
     {
-        if (UpdateOptions.NugetAudit is object)
-        {
-            var nuGetAuditUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.NuGetAudit,
-                UpdateOptions.NugetAudit.NuGetAudit.ToString().ToLower(),
-                addIfElementNotFound: true);
-            var nugetAuditModeUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.NuGetAuditMode,
-                UpdateOptions.NugetAudit.AuditMode.ToString().ToLower(),
-                addIfElementNotFound: true);
-            var nugetAuditLevelUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.NuGetAuditLevel,
-                UpdateOptions.NugetAudit.AuditLevel,
-                addIfElementNotFound: true);
-
-            var nugetUpdatesGroup = new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
-            [
-                nuGetAuditUpdates,
-                nugetAuditModeUpdates,
-                nugetAuditLevelUpdates
-            ]);
-
-            return [nugetUpdatesGroup];
-        }
-
-        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
-    }
-
-    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetVersioning()
-    {
-        if (UpdateOptions.DotNetVersioningOptions is object)
-        {
-            var targetFrameworkUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.TargetFramework,
-                UpdateOptions.DotNetVersioningOptions.DotNetTargetFramework,
-                addIfElementNotFound: false,
-                skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
-
-            var langUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.LangVersion,
-                UpdateOptions.DotNetVersioningOptions.DotNetLangVersion,
-                addIfElementNotFound: true);
-
-            var warningsAsErrorsUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.TreatWarningsAsErrors,
-                UpdateOptions.DotNetVersioningOptions.TreatWarningsAsErrors.ToString().ToLower(),
-                addIfElementNotFound: true);
-
-            var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
-
-            builder.Add(
-                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
-                [
-                    targetFrameworkUpdates,
-                ]));
-
-            builder.Add(
-                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
-                [
-                    langUpdates,
-                    warningsAsErrorsUpdates,
-                ]));
-
-            return builder.ToImmutableArray();
-        }
-
-        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
-    }
-
-    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetAnalyzers()
-    {
-        if (UpdateOptions.DotNetAnalyzerOptions is object)
-        {
-            var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
-            CsprojUpdateTracker.EnableNETAnalyzers,
-            UpdateOptions.DotNetAnalyzerOptions.EnableNetAnalyzers.ToString().ToLower(),
+        var nuGetAuditUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAudit,
+            nugetAudit.NuGetAudit.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditModeUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditMode,
+            nugetAudit.AuditMode.ToString().ToLower(),
+            addIfElementNotFound: true);
+        var nugetAuditLevelUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.NuGetAuditLevel,
+            nugetAudit.AuditLevel,
             addIfElementNotFound: true);
 
-            var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
-                CsprojUpdateTracker.EnforceCodeStyleInBuild,
-                UpdateOptions.DotNetAnalyzerOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
-                addIfElementNotFound: true);
+        var nugetUpdatesGroup = new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
+        [
+            nuGetAuditUpdates,
+                nugetAuditModeUpdates,
+                nugetAuditLevelUpdates
+        ]);
 
-            var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+        return [nugetUpdatesGroup];
+    }
 
-            builder.Add(
-                new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
-                [
-                    enableNETAnalyzersUpdates,
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetVersioning(CsProjVersioningOptions csProjVersioningOptions)
+    {
+        var targetFrameworkUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.TargetFramework,
+            csProjVersioningOptions.TargetFramework,
+            addIfElementNotFound: false,
+            skipStartsWithValues: ["netstandard"]);//Project is set to .NET Standard are there for a reason, don't change it
+
+        var langUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.LangVersion,
+            csProjVersioningOptions.LangVersion,
+            addIfElementNotFound: true);
+
+        var warningsAsErrorsUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.TreatWarningsAsErrors,
+            csProjVersioningOptions.TreatWarningsAsErrors.ToString().ToLower(),
+            addIfElementNotFound: true);
+
+        var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+
+        builder.Add(
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.DoNothing,
+            [
+                targetFrameworkUpdates,
+            ]));
+
+        builder.Add(
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup,
+            [
+                langUpdates,
+                    warningsAsErrorsUpdates,
+            ]));
+
+        return builder.ToImmutableArray();
+    }
+
+    private ImmutableArray<CsprojUpdateGroupTracker> GenerateUpdateGroupForDotNetAnalyzers(CsProjDotNetAnalyzerOptions csProjDotNetAnalyzerOptions)
+    {
+        var enableNETAnalyzersUpdates = new CsprojUpdateTracker(
+        CsprojUpdateTracker.EnableNETAnalyzers,
+        csProjDotNetAnalyzerOptions.EnableNetAnalyzers.ToString().ToLower(),
+        addIfElementNotFound: true);
+
+        var enforceCodeStyleInBuildUpdates = new CsprojUpdateTracker(
+            CsprojUpdateTracker.EnforceCodeStyleInBuild,
+            csProjDotNetAnalyzerOptions.EnforceCodeStyleInBuild.ToString().ToLower(),
+            addIfElementNotFound: true);
+
+        var builder = ImmutableArray.CreateBuilder<CsprojUpdateGroupTracker>();
+
+        builder.Add(
+            new CsprojUpdateGroupTracker(CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup,
+            [
+                enableNETAnalyzersUpdates,
                     enforceCodeStyleInBuildUpdates
-                ]));
+            ]));
 
-            return builder.ToImmutableArray();
-        }
-
-        return ImmutableArray<CsprojUpdateGroupTracker>.Empty;
+        return builder.ToImmutableArray();
     }
 
     private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> updateGroups)

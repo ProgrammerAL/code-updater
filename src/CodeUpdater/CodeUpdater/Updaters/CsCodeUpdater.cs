@@ -1,22 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
+﻿
 using ProgrammerAL.Tools.CodeUpdater.Helpers;
 
 using Serilog;
 
 namespace ProgrammerAL.Tools.CodeUpdater.Updaters;
 
-public class CsCodeUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper, UpdateOptions UpdateOptions)
+public class CsCodeUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
 {
-    public async ValueTask<DotnetFormatResult> RunDotnetFormatAsync(string csProjFilePath)
+    public async ValueTask<DotnetFormatResult> RunDotnetFormatAsync(string csProjFilePath, CSharpStyleOptions cSharpStyleOptions)
     {
-        if (!UpdateOptions.RunDotnetFormat)
+        if (!cSharpStyleOptions.RunDotnetFormat)
         {
             return new DotnetFormatResult(csProjFilePath, DotnetFormatResultType.DidNotRun);
         }
