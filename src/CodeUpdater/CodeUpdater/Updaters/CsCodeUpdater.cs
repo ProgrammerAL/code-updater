@@ -14,7 +14,7 @@ public class CsCodeUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
             return new DotnetFormatResult(csProjFilePath, DotnetFormatResultType.DidNotRun);
         }
 
-        string commandArgs = $"format \"{csProjFilePath}\"";
+        string commandArgs = $"format \"{csProjFilePath}\" --no-restore --verbosity diagnostic";
         try
         {
             var processResult = await RunProcessHelper.RunProcessToCompletionAndGetOutputAsync("dotnet", commandArgs);

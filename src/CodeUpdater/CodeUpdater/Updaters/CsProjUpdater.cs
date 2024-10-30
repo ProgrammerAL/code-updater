@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 using Serilog;
@@ -15,20 +16,20 @@ public class CsProjUpdater(ILogger Logger)
 {
     public CsProjUpdateResult UpdateCsProjPropertyValues(string csProjFilePath, CSharpOptions cSharpOptions)
     {
-        var csProjXmlDoc = XDocument.Load(csProjFilePath, LoadOptions.PreserveWhitespace);
-
+        var csProjXmlDoc = XDocument.Load(csProjFilePath);
+        var rootElm = csProjXmlDoc.Root ?? throw new Exception($"*.csproj file has no root xml element: {csProjFilePath}");
         var propertyGroups = csProjXmlDoc.Descendants("PropertyGroup").ToList();
 
         var projectUpdateGroups = DetermineProjectUpdateGroups(cSharpOptions);
 
         UpdateOrAddCsProjValues(
-            csProjXmlDoc,
+            rootElm,
             propertyGroups,
             projectUpdateGroups);
 
         //Write the file back out
         //Note: Use File.WriteAllText instead of Save() because calling XDocument.ToString() doesn't include the xml header
-        File.WriteAllText(csProjFilePath, csProjXmlDoc.ToString(), Encoding.UTF8);
+        File.WriteAllText(csProjFilePath, rootElm.ToString(), Encoding.UTF8);
 
         var langUpdates = projectUpdateGroups.SelectMany(x => x).SelectMany(x => x.UpdateTrackers).FirstOrDefault(x => x.ElementName == CsprojUpdateTracker.LangVersion);
         var targetFrameworkUpdates = projectUpdateGroups.SelectMany(x => x).SelectMany(x => x.UpdateTrackers).FirstOrDefault(x => x.ElementName == CsprojUpdateTracker.TargetFramework);
@@ -158,7 +159,7 @@ public class CsProjUpdater(ILogger Logger)
         return builder.ToImmutableArray();
     }
 
-    private void UpdateOrAddCsProjValues(XDocument csProjXmlDoc, List<XElement> propertyGroupsElements, ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> updateGroups)
+    private void UpdateOrAddCsProjValues(XElement csProjXml, List<XElement> propertyGroupsElements, ImmutableArray<ImmutableArray<CsprojUpdateGroupTracker>> updateGroups)
     {
         //Separate updates into groups
         //  This way, when the groups are added to the csproj, they are grouped together to the same PropetyGroup
@@ -182,12 +183,12 @@ public class CsProjUpdater(ILogger Logger)
                     }
                 }
 
-                AddMissingElements(csProjXmlDoc, tracker);
+                AddMissingElements(csProjXml, tracker);
             }
         }
     }
 
-    private void AddMissingElements(XDocument csProjXmlDoc, CsprojUpdateGroupTracker updateGroup)
+    private void AddMissingElements(XElement csProjXml, CsprojUpdateGroupTracker updateGroup)
     {
         var toUpdate = updateGroup.UpdateTrackers.Where(x => !x.HasMadeRequiredUpdate()).ToImmutableArray();
 
@@ -199,13 +200,14 @@ public class CsProjUpdater(ILogger Logger)
         XElement? propertyGroupToAddTo = null;
         if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToFirstPropertyGroup)
         {
-            propertyGroupToAddTo = csProjXmlDoc.Descendants("PropertyGroup").FirstOrDefault();
+            propertyGroupToAddTo = csProjXml.Descendants("PropertyGroup").FirstOrDefault();
         }
         else if (updateGroup.NotFoundAction == CsprojUpdateGroupTracker.NotFoundActionType.AddElementToNewPropertyGroup)
         {
             Logger.Information("Adding new PropertyGroup element for other required elements");
             propertyGroupToAddTo = new XElement("PropertyGroup");
-            csProjXmlDoc.Root!.Add(propertyGroupToAddTo);
+
+            csProjXml.Add(propertyGroupToAddTo);
         }
 
         //Add the trackers that haven't already set the final value
@@ -216,7 +218,6 @@ public class CsProjUpdater(ILogger Logger)
                 Logger.Information($"Adding {trackers.ElementName} element to csproj");
                 var newElement = new XElement(trackers.ElementName, trackers.NewValue);
                 propertyGroupToAddTo.Add(newElement);
-
                 trackers.SetResults.Add(CsprojValueUpdateResultType.AddedElement);
             }
         }

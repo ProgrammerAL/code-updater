@@ -103,6 +103,7 @@ static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)
     var updateOptions = JsonSerializer.Deserialize<UpdateOptions>(updateOptionJson, new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
     });
 
     if (updateOptions is null)
