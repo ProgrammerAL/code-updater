@@ -67,12 +67,12 @@ public class CSharpOptions
     /// Settings to use for configuring Nuget Audit settings in csproj files.
     /// You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
     /// </summary>
-    public NugetAuditOptions? NugetAudit { get; set; }
+    public NugetAuditOptions? NugetAuditOptions { get; set; }
 
     /// <summary>
     /// Settings to use for updating NuGet packages in csproj files
     /// </summary>
-    public NuGetUpdateOptions? NuGetUpdates { get; set; }
+    public NuGetUpdateOptions? NuGetUpdateOptions { get; set; }
 }
 
 public class CsProjVersioningOptions

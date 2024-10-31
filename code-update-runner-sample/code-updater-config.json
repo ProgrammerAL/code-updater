@@ -1,5 +1,5 @@
 {
-  "RootDirectory": "C:/my-repos/my-app-1",
+  "RootDirectory": "./",
   "IgnorePatterns": [],
   "CSharpOptions": {
     "CsProjVersioningOptions": {
