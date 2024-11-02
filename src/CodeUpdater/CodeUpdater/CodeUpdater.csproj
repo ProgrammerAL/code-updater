@@ -1,46 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		<LangVersion>latest</LangVersion>
-		<RootNamespace>ProgrammerAL.Tools.CodeUpdater</RootNamespace>
-		<AssemblyName>ProgrammerAL.Tools.CodeUpdater</AssemblyName>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-	</PropertyGroup>
-	<PropertyGroup>
-		<Version>0.1.0</Version>
-		<Title>Code Updater</Title>
-		<Authors>ProgrammerAL</Authors>
-		<Description>A .NET tool to update code and dependencies to latest versions.</Description>
-		<PackageProjectUrl>https://github.com/ProgrammerAL/code-updater</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/ProgrammerAL/code-updater</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-		<PackageTags>tool</PackageTags>
-
-		<PackAsTool>true</PackAsTool>
-		<ToolCommandName>code-updater</ToolCommandName>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-	</PropertyGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="CommandLineParser" Version="2.9.1" />
-	  <PackageReference Include="ProgrammerAl.SourceGenerators.PublicInterfaceGenerator" Version="1.0.0.62" PrivateAssets="all" />
-	  <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-	  <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-	</ItemGroup>
-	
-	<ItemGroup>
-		<!--Include the ReadMe in the nuget package-->
-		<None Include="../../../README.md" Pack="true" PackagePath="/" />
-	</ItemGroup>
-	<PropertyGroup>
-		<NuGetAudit>true</NuGetAudit>
-		<NuGetAuditMode>all</NuGetAuditMode>
-		<NuGetAuditLevel>low</NuGetAuditLevel>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>ProgrammerAL.Tools.CodeUpdater</RootNamespace>
+    <AssemblyName>ProgrammerAL.Tools.CodeUpdater</AssemblyName>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Title>Code Updater</Title>
+    <Authors>ProgrammerAL</Authors>
+    <Description>A .NET tool to update code and dependencies to latest versions.</Description>
+    <PackageProjectUrl>https://github.com/ProgrammerAL/code-updater</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProgrammerAL/code-updater</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>tool</PackageTags>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>code-updater</ToolCommandName>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="ProgrammerAl.SourceGenerators.PublicInterfaceGenerator" Version="1.0.0.62" PrivateAssets="all" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--Include the ReadMe in the nuget package-->
+    <None Include="../../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+  </PropertyGroup>
 </Project>

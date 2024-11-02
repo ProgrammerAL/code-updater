@@ -287,3 +287,5 @@ __pycache__/
 **/.wrangler/**
 
 **/src/**/dist
+
+**/code-updater-output.txt
