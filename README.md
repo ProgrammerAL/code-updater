@@ -109,7 +109,7 @@ This is a config file used by the app to determine what updates to run. It is co
   - Required Properties:
     - NpmBuildCommand
       - NpmBuildCommand
-        - String. Npm command to \"compile\" the npm directory. Format run is: npm run <NpmBuildCommand>.
+        - String. Npm command to \"compile\" the npm directory. Format of the command run is: `npm run {{NpmBuildCommand}}`
 
 
 ### Example Options File
