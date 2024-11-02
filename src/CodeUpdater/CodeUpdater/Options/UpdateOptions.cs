@@ -60,7 +60,7 @@ public class NpmCompileOptions
     /// Npm command to \"compile\" the npm directory. The CLI command that will be run is: npm run {{NpmBuildCommand}}
     /// </summary>
     [Required(AllowEmptyStrings = false)]
-    public required string NpmBuildCommand { get; set; }
+    public required string BuildCommand { get; set; }
 }
 
 public class CSharpOptions

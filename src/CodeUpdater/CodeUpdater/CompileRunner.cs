@@ -23,7 +23,7 @@ public class CompileRunner(ILogger Logger, IRunProcessHelper RunProcessHelper)
 
     private async ValueTask<CompileNpmDirectoryResults> BuildAllNpmDirectoriesAsync(UpdateWork updateWork, UpdateOptions updateOptions)
     {
-        var npmBuildCommand = updateOptions.NpmOptions?.NpmCompileOptions?.NpmBuildCommand;
+        var npmBuildCommand = updateOptions.NpmOptions?.NpmCompileOptions?.BuildCommand;
         if (!string.IsNullOrWhiteSpace(npmBuildCommand))
         {
             Logger.Information("Np NpmOptions config set, meaning no NPM Packages Updated, meaning nothing to compile");

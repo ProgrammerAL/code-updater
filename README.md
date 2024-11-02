@@ -160,7 +160,7 @@ This is a config file used by the app to determine what updates to run. It is co
   },
   "NpmOptions": {
     "NpmCompileOptions":{
-      "NpmBuildCommand": "publish"
+      "BuildCommand": "publish"
     }
   }
 }
