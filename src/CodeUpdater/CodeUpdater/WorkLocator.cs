@@ -54,7 +54,7 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
             var skipPath = skipPaths.FirstOrDefault(x => csProjFilePath.Contains(x, StringComparison.OrdinalIgnoreCase));
             if (skipPath is object)
             {
-                Logger.Information($"Skipping '{csProjFilePath}' file because it's path should be ignored by rule: {skipPath}");
+                Logger.Debug($"Skipping '{csProjFilePath}' file because it's path should be ignored by rule: {skipPath}");
             }
             else
             {
@@ -69,7 +69,7 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
     {
         if (UpdateOptions.NpmOptions is null)
         {
-            Logger.Information("Np NpmOptions config set, will not attempt to update NPM Packages");
+            Logger.Information("No NpmOptions config set, will not attempt to update NPM Packages");
             return ImmutableArray<string>.Empty;
         }
 
@@ -81,14 +81,14 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
             var packagePath = Path.GetDirectoryName(packageJsonPath);
             if (string.IsNullOrWhiteSpace(packagePath))
             {
-                Logger.Information($"Skipping '{packageJsonPath}' file because it's path is null or empty");
+                Logger.Debug($"Skipping '{packageJsonPath}' file because it's path is null or empty");
                 continue;
             }
 
             var skipPath = skipPaths.FirstOrDefault(x => packagePath.Contains(x, StringComparison.OrdinalIgnoreCase));
             if (skipPath is object)
             {
-                Logger.Information($"Skipping '{packagePath}' because it's path should be ignored by rule: {skipPath}");
+                Logger.Debug($"Skipping '{packagePath}' because it's path should be ignored by rule: {skipPath}");
             }
             else
             {
