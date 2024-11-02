@@ -1,6 +1,15 @@
 {
-  "RootDirectory": "./",
-  "IgnorePatterns": [],
+  "UpdatePathOptions": {
+    "RootDirectory": "../",
+    "IgnorePatterns": [
+      "/samples/",
+      "\\samples\\"
+    ]
+  },
+  "LoggingOptions": {
+    "LogLevel": "Verbose",
+    "OutputFile": "./code-updater-output.txt"
+  },
   "CSharpOptions": {
     "CsProjVersioningOptions": {
       "TreatWarningsAsErrors": true,
@@ -26,9 +35,5 @@
   },
   "NpmOptions": {
     "NpmBuildCommand": "publish"
-  },
-  "LoggingOptions": {
-    "LogLevel": "Verbose",
-    "OutputFile": "./code-updater-output.txt"
   }
 }

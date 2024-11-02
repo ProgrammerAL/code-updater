@@ -21,7 +21,7 @@ await Parser.Default.ParseArguments<CommandOptions>(args)
 
 static async ValueTask RunAsync(CommandOptions commandOptions)
 {
-    var updateOptions = await LoadUpdateOptionsAsync(commandOptions.ConfigFile);
+    var updateOptions = await LoadUpdateOptionsAsync(commandOptions.OptionsFile);
     var logger = SetupLogger(updateOptions);
 
     var runProcessHelper = new RunProcessHelper(logger);
@@ -31,9 +31,9 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     var npmUpdater = new NpmUpdater(logger, runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
 
-    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.IgnorePatterns);
+    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.PathOptions.IgnorePatterns);
 
-    var updateWork = workLocator.DetermineUpdateWork(updateOptions.RootDirectory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(updateOptions.PathOptions.RootDirectory, skipPaths);
 
     var canRun = await validator.VerifyCanRunAsync(updateWork);
 

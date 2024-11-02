@@ -6,20 +6,10 @@ namespace ProgrammerAL.Tools.CodeUpdater;
 public class UpdateOptions
 {
     /// <summary>
-    /// Root directory to run from.
-    /// Code Updater will search all child directories within this for projects to update.
-    /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string RootDirectory { get; set; }
-
-    /// <summary>
-    /// String to ignore within file paths when looking for projects to update. 
-    /// This is OS sensitive, so use \\ as the path separator for Windows, and / as the path separator everywhere else. 
-    /// Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. 
-    /// Which will only happen on Windows because that uses backslashes for path separators.
+    /// Options for path to use when updating code
     /// </summary>
     [Required]
-    public required IEnumerable<string> IgnorePatterns { get; set; }
+    public required UpdatePathOptions UpdatePathOptions { get; set; }
 
     /// <summary>
     /// Options for updating C# projects and code
@@ -35,6 +25,26 @@ public class UpdateOptions
     /// Options for output logging of the operation
     /// </summary>
     public LoggingOptions? LoggingOptions { get; set; }
+}
+
+public class UpdatePathOptions
+{
+    /// <summary>
+    /// Root directory to run from.
+    /// Code Updater will search all child directories within this for projects to update.
+    /// </summary>
+    [Required(AllowEmptyStrings = false)]
+    public required string RootDirectory { get; set; }
+
+    /// <summary>
+    /// String to ignore within file paths when looking for projects to update. 
+    /// This is OS sensitive, so use \\ as the path separator for Windows, and / as the path separator everywhere else. 
+    /// Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. 
+    /// Which will only happen on Windows because that uses backslashes for path separators.
+    /// </summary>
+    [Required]
+    public required IEnumerable<string> IgnorePatterns { get; set; }
+
 }
 
 public class NpmOptions
@@ -54,7 +64,7 @@ public class CSharpOptions
     public CsProjVersioningOptions? CsProjVersioningOptions { get; set; }
 
     /// <summary>
-    /// Analyzers that are set in the csproj files
+    /// .NET Analyzer settings to set in all csproj files
     /// </summary>
     public CsProjDotNetAnalyzerOptions? CsProjDotNetAnalyzerOptions { get; set; }
 

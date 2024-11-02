@@ -34,78 +34,125 @@ There are 2 ways to run this. As a .NET Tool installed on your machine, or downl
 
 ## CLI Options
 
-- `-d|--config`
+- `-o|--options`
 	- Required
 	- Path to the file to use for config values when updating code
 - `-h|--help`
   - Outputs CLI help
 
-## Config File
+## Options File
 
-The config file holds all values to determine what changes to make. The reason this is separate from CLI input arguments is to let a developer store this config in different repos but have this .NET Tool installed globally on their machine. That makes it easy to let other developers run this tool with specific settings for each repository, while only needing to provide a single CLI input argument.
+This is a config file used by the app to determine what updates to run. It is composed of different objects which enable update features. Setting an object means that feature will run, leaving it null will disable that update feature. 
 
-Below are the list of properties in the config file.
 
-- RootDirectory
+- UpdatePathOptions
   - Required
-	- Root directory to run from. Code Updater will search all child directories within this for projects to update.
-- IgnorePatterns
-  - Required
-	- String to ignore within file paths when looking for projects to update. This is OS sensitive, so use \ as the path separator for Windows, and / as the path separator everywhere else. Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. Note this example will only happen on Windows because that uses backslashes for path separators.- NpmBuildCommand
-- NpmBuildCommand
-  - Required
-	- After upgrading all of the code, this application will attempt to build all applications it updated. This option sets the npm command to run to do the build.
-	- Npm command to run to "compile" the npm directory. Default value is `publish`. Format run is: npm run <npmBuildCommand>.
-- DotNetTargetFramework
-  - Required
-	- Target Framework to set in all *.CsProj files
-- DotNetLangVersion
-  - Required
-	- C# language version to set in all *.CsProj files
-- EnableNetAnalyzers
-  - Required
-	- Boolean value to set the `EnableNetAnalyzers` csproj element to. If the `EnableNetAnalyzers` element does not exist in the project file, it will be added.
-- EnforceCodeStyleInBuild
-  - Required
-	- Boolean value to set the `EnforceCodeStyleInBuild` csproj element to. If the `EnableNetAnalyzers` element does not exist in the project file, it will be added.
-- RunDotnetFormat
-  - Required
-  - True to run the `dotnet format` command on all csproj files
-- NugetAudit
-  - Required
-  - This is an object with 3 properties, each is required. For more information see the Microsoft documentation at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
-    - NuGetAudit
-      - Boolean to enable/disable the NuGet Audit features. Note that even if this is set to false, you still need to provide values for the other 2 properties even though they won't be used.
-    - AuditMode
-      - String. Which mode to audit, `direct` dependencies, or `all` dependencies.
-    - AuditLevel
-      - String. Minimum severity level to report. Ex: If you set it to moderate, you get `moderate`, `high`, and `critical` advisories. If you set it to `low`, you get all advisories.
-- OutputFile
+  - This object holds settings for what to update
+  - Properties:
+    - RootDirectory
+      - Root directory to run from. Code Updater will search all child directories within this for projects to update.
+    - IgnorePatterns
+    	- String to ignore within file paths when looking for projects to update. This is OS sensitive, so use \ as the path separator for Windows, and / as the path separator everywhere else. Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. Note this example will only happen on Windows because that uses backslashes for path separators.- NpmBuildCommand
+- LoggingOptions
   - Optional
-  - If this is set, it will be the file to write logs to, in addition to the console
-- LogLevel
+  - Options for output logging of the operation
+  - Required Properties:
+    - OutputFile
+      - If this is set, it will be the file to write logs to, in addition to the console
+    - LogLevel
+      - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+- CSharpOptions
   - Optional
-  - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+  - This stores different options for what updates to perform on C# code
+  - Child Objects:
+    - CsProjVersioningOptions
+      - Optional
+      - Versioning options for csproj files
+      - Required Properties:
+        - TargetFramework
+          - String. Target Framework to set in all *.csproj files
+        - LangVersion
+          - String. C# language version to set in all *.csproj files
+        - TreatWarningsAsErrors
+          - Boolean. The value to set for the TreatWarningsAsErrors flag in all *.csproj files
+    - CsProjDotNetAnalyzerOptions
+      - .NET Analyzer settings to set in all csproj files
+      - Required Properties:
+        - EnableNetAnalyzers
+          - Boolean. True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
+        - EnforceCodeStyleInBuild
+          - Boolean. True to set the `EnforceCodeStyleInBuild` csproj value to true, false to set it to false
+    - CSharpStyleOptions
+      - Options for any code styling updates that will be performed over C# code
+      - Required Properties:
+        - RunDotnetFormat
+          - Boolean. True to run the `dotnet format` command
+    - NugetAuditOptions
+      - Settings to use for configuring Nuget Audit settings in csproj files. You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+      - Required Properties:
+        - NuGetAudit
+          - Boolean. What value to set for the `NuGetAudit` property in the csproj file.
+        - AuditMode
+          - String. What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.
+        - AuditLevel
+          - String. What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
+    - NuGetUpdateOptions
+      - Settings to use for updating NuGet packages in csproj files
+      - Required Properties:
+        - UpdateTopLevelNugetsInCsProj
+          - Boolean. True to updates all referenced nugets to the latest version. These are the references in the csproj files.
+        - UpdateTopLevelNugetsNotInCsProj
+          - Boolean. True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
+- NpmOptions
+  - Optional
+  - Options for updating Npm packages
+  - Required Properties:
+    - NpmBuildCommand
+      - NpmBuildCommand
+        - String. Npm command to \"compile\" the npm directory. Format run is: npm run <NpmBuildCommand>.
 
-### Example Config File
+
+### Example Options File
 
 ```json
 {
-  "RootDirectory": "C:\\GitHub\\ProgrammerAl\\ProgrammerAlSite",
-  "IgnorePatterns": [],
-  "NpmBuildCommand": "publish",
-  "DotNetTargetFramework": "net8.0",
-  "DotNetLangVersion": "latest",
-  "EnableNetAnalyzers": true,
-  "EnforceCodeStyleInBuild": true,
-  "RunDotnetFormat": true,
-  "NugetAudit": {
-    "NuGetAudit": true,
-    "AuditMode": "all",
-    "AuditLevel": "low"
+  "UpdatePathOptions": {
+    "RootDirectory": "C:/my-repos/my-app-1",
+    "IgnorePatterns": [
+      "/samples/",
+      "\\samples\\"
+    ]
   },
-  "OutputFile": "./code-updater-output.txt",
-  "LogLevel": "Verbose"
+  "LoggingOptions": {
+    "LogLevel": "Verbose",
+    "OutputFile": "./code-updater-output.txt"
+  },
+  "CSharpOptions": {
+    "CsProjVersioningOptions": {
+      "TreatWarningsAsErrors": true,
+      "TargetFramework": "net8.0",
+      "LangVersion": "latest"
+    },
+    "CsProjDotNetAnalyzerOptions": {
+      "EnableNetAnalyzers": true,
+      "EnforceCodeStyleInBuild": true
+    },
+    "CSharpStyleOptions": {
+      "RunDotnetFormat": true
+    },
+    "NugetAuditOptions": {
+      "NuGetAudit": true,
+      "AuditMode": "all",
+      "AuditLevel": "low"
+    },
+    "NuGetUpdateOptions": {
+      "UpdateTopLevelNugetsInCsProj": true,
+      "UpdateTopLevelNugetsNotInCsProj": true
+    }
+  },
+  "NpmOptions": {
+    "NpmBuildCommand": "publish"
+  }
 }
 ```
 	 
@@ -129,7 +176,7 @@ Ignore packages inside node_modules folder:
 
 ## Installing Locally vs Downloading the Code
 
-The tool is very opinionated. It updates all packages to the latest version, and sets some project level properties. If the tool does some things you can't use for your projects, you can download the code, make changes, and keep thay for yourself. Maybe in the future we can hide certain settings behind a flag. Feel free to file an issue and and we can discuss it.
+The tool can be very opinionated. When updating packages it will only update to the latest version. If the tool does some things you can't use for your projects, you can download the code, make changes, and keep that for yourself (OSS FTW). If this is something you have to do, feel free to file an issue in the repo and and we can discuss it.
 
 ## Required 3rd Party Software
 
@@ -140,12 +187,11 @@ In order to run the tool you need the following software installed on your local
 - PowerShell
   - Quick Reminder: PowerShell is cross platform, you can run it on Linux and MacOS, not just Windows
 
-PowerShell is required as a workaround. The NPM executable on Windows doesn't run like other applications. It doesn't exit like a normal process. I don't know why, I never spent the time figuring it out. The workaround makes PowerShell the host application so it exits like you would expect, when the process is done. For this reason, whenever an external process must be run, it's run through PowerShell. Kind of a hack, but it works well enough.
+PowerShell is required as a workaround. The NPM executable on Windows doesn't run like other applications, and as a result, on Windows, it doesn't exit like a normal process. I don't know why, I never spent the time figuring it out. The workaround makes PowerShell the host application so it exits like you would expect, when the process is done. For this reason, whenever an external process must be run, it's run through PowerShell. It's a hack, but it works well enough.
 
 ## .NET Standard Projects
 
 When updating *.csproj files to a specific `TargetFramework` version, the project is skipped if using .NET Standard. Those are usually set for a specific level of API compatibility so we don't want to mess with those.
-
 
 ## Update Script Sample
 
@@ -156,5 +202,5 @@ You can create a script to make it easy to run Code Updater on a regular basis. 
 - `run-code-updater.ps1`
   - PowerShell script that runs Code Updater one directory up in the tree, using the given `code-updater-config.json` file as config
  
-Feel free to use those files as a base, and modify them for your repositories as needed. For extra points, commit them to your repository too.
+Feel free to use those files as a base, and modify them for your repositories as needed. For extra points, commit them to your repository to make it easy to use in the future.
 
