@@ -21,7 +21,7 @@
       "EnforceCodeStyleInBuild": true
     },
     "CSharpStyleOptions": {
-      "RunDotnetFormat": true
+      "RunDotnetFormat": false
     },
     "NugetAuditOptions": {
       "NuGetAudit": true,
@@ -30,7 +30,7 @@
     },
     "NuGetUpdateOptions": {
       "UpdateTopLevelNugetsInCsProj": true,
-      "UpdateTopLevelNugetsNotInCsProj": true
+      "UpdateTopLevelNugetsNotInCsProj": false
     }
   },
   "NpmOptions": {

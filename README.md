@@ -4,14 +4,14 @@ The purpose of this project is to update specific aspects of code below a direct
 
 It would be great to get this to work for all kinds of languages/frameworks someday, but for now it's just .NET and a little bit for NPM.
 
-## What Updates Cane Be Done
+## What Updates Can Be Done
 
-- Update .NET *.csproj files to use a specified C# Language Version
-- Update .NET *.csproj files to use a specified .NET SDK Version (AKA TargetFramework element)
-- Enable/Disable .NET Analyzers in all *.csproj files
-- Run `dotnet format` command on all *.csproj files
-- Update all NuGet packages in all *.csproj files to the latest version
-- Add Nuget auditing properties to all *.csproj files 
+- Update .NET `*.csproj` files to use a specified C# Language Version
+- Update .NET `*.csproj` files to use a specified .NET SDK Version (AKA TargetFramework element)
+- Enable/Disable .NET Analyzers in all `*.csproj` files
+- Run `dotnet format` command on all `*.csproj` files
+- Update all NuGet packages in all *`.csproj` files to the latest version
+- Add Nuget auditing properties to all `*.csproj` files 
 - Update all NPM packages in all package.json files to the latest version
 
 ## How to Use It
@@ -67,16 +67,16 @@ This is a config file used by the app to determine what updates to run. It is co
   - Child Objects:
     - CsProjVersioningOptions
       - Optional
-      - Versioning options for csproj files
+      - Versioning options for `*.csproj` files
       - Required Properties:
         - TargetFramework
-          - String. Target Framework to set in all *.csproj files
+          - String. Target Framework to set in all `*.csproj` files
         - LangVersion
-          - String. C# language version to set in all *.csproj files
+          - String. C# language version to set in all `*.csproj` files
         - TreatWarningsAsErrors
-          - Boolean. The value to set for the TreatWarningsAsErrors flag in all *.csproj files
+          - Boolean. The value to set for the TreatWarningsAsErrors flag in all `*.csproj` files
     - CsProjDotNetAnalyzerOptions
-      - .NET Analyzer settings to set in all csproj files
+      - .NET Analyzer settings to set in all `*.csproj` files
       - Required Properties:
         - EnableNetAnalyzers
           - Boolean. True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
@@ -191,7 +191,7 @@ PowerShell is required as a workaround. The NPM executable on Windows doesn't ru
 
 ## .NET Standard Projects
 
-When updating *.csproj files to a specific `TargetFramework` version, the project is skipped if using .NET Standard. Those are usually set for a specific level of API compatibility so we don't want to mess with those.
+When updating csproj files to a specific `TargetFramework` version, the project is skipped if using .NET Standard. Those are usually set for a specific level of API compatibility so we don't want to mess with those.
 
 ## Update Script Sample
 
