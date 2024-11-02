@@ -16,54 +16,54 @@ It would be great to get this to work for all kinds of languages/frameworks some
 
 ## How to Use It
 
-Remember, the purpose of this is to update code. It is assumed, and recommended, a developer runs this locally and verifies the changes before comitting to source control. Below are the assumed steps a user would follow.
+Remember, the purpose of this is to update code and dependencies. It is assumed, and recommended, a developer runs this locally and verifies the changes before comitting the changes to source control. Below are the assumed steps a user would follow.
 
-There are 2 ways to run this. As a .NET Tool installed on your machine, or downloading the repository and running the code yourself.
-
-1. Install the application. Choose one:
+1. Install the Tool
   - Install the tool globally by running `dotnet tool install --global ProgrammerAL.Tools.CodeUpdater --version <<version number>>`
-  - Or clone this repository locally
-2. Run the application
-  - If you installed the tool, run it with the command: `code-updater --config "C:/my-repos/my-app-1"`
-  - If you downloaded the code, open a terminal to the `~/src/CodeUpdater/CodeUpdater` directory and run the application using dotnet run while passing in the required arguments. Example: `dotnet run -- --config "C:/my-repos/my-app-1"`
-3. Wait for the application to finish. It will output the number of projects updated, and the number of projects that failed to update.
-4. Manually check a diff of all the file changes to ensure everything is as you expect
+2. Create an Options File
+  - The options file specifys what updates to run on the code
+  - Instructions on how to create the file are below. See the `Options File` and `Example Options File` sections
+3. Run the Tool
+  - Run it with the command: `code-updater --options "C:/my-repos/my-app-1/my-options-file.json"`
+4. Wait for the application to finish. It will output the number of projects updated, and the number of projects that failed to update.
+5. Manually check a diff of all the file changes to ensure everything is as you expect
   - Make any manual changes you feel you need to
   - If there were any build failures that were caused by the updates, fix those
-5. Commit the code changes to source control. Wait for a CI/CD pipeline to run and ensure everything is still working as expected.
+6. Commit the code changes to source control. Wait for a CI/CD pipeline to run and ensure everything is still working as expected. You do have a CI/CD pipeline, right?
 
 ## CLI Options
 
 - `-o|--options`
-	- Required
-	- Path to the file to use for config values when updating code
+	- Path to the options file to use for updating code
 - `-h|--help`
   - Outputs CLI help
 
 ## Options File
 
-This is a config file used by the app to determine what updates to run. It is composed of different objects which enable update features. Setting an object means that feature will run, leaving it null will disable that update feature. 
-
+This is a config file used by the app to determine what updates to run. It is composed of different objects which enable certain update features. Setting an object means that feature will run. Omitting it from the file will disable that update feature. 
 
 - UpdatePathOptions
   - Required
-  - This object holds settings for what to update
+  - This object determines what will be updated based on file paths
   - Properties:
     - RootDirectory
       - Root directory to run from. Code Updater will search all child directories within this for projects to update.
     - IgnorePatterns
-    	- String to ignore within file paths when looking for projects to update. This is OS sensitive, so use \ as the path separator for Windows, and / as the path separator everywhere else. Eg: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. Note this example will only happen on Windows because that uses backslashes for path separators.- NpmBuildCommand
+    	- Strings to ignore within file paths when looking for projects to update. This is OS sensitive, so use \ as the path separator for Windows, and / as the path separator everywhere else. Ex: `\my-skip-path\` will ignore all projects that have the text `\my-skip-path\` within the full path. Note this example will only work on Windows because that uses backslashes for path separators.
 - LoggingOptions
   - Optional
-  - Options for output logging of the operation
-  - Required Properties:
+  - Options for output logging of the tool
+  - Properties:
     - OutputFile
-      - If this is set, it will be the file to write logs to, in addition to the console
+      - Optional
+      - Path to a file to write logs to. Note that logs are always written to the console, even if you choose to output to a file.
     - LogLevel
-      - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
+      - Optional
+      - Default Value: verbose
+      - Verbosity level to log. Valid values are: Verbose, Info, Warn, Error
 - CSharpOptions
   - Optional
-  - This stores different options for what updates to perform on C# code
+  - This stores different objects, each are a set of options for what updates to perform on C# code and csproj files
   - Child Objects:
     - CsProjVersioningOptions
       - Optional
@@ -76,18 +76,21 @@ This is a config file used by the app to determine what updates to run. It is co
         - TreatWarningsAsErrors
           - Boolean. The value to set for the TreatWarningsAsErrors flag in all `*.csproj` files
     - CsProjDotNetAnalyzerOptions
-      - .NET Analyzer settings to set in all `*.csproj` files
+      - Optional
+      - .NET First Party Analyzer settings to set in all `*.csproj` files. You can read more at https://learn.microsoft.com/en-us/visualstudio/code-quality/install-net-analyzers?view=vs-2022
       - Required Properties:
         - EnableNetAnalyzers
-          - Boolean. True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false
+          - Boolean. Value to set the `EnableNetAnalyzers` csproj value to
         - EnforceCodeStyleInBuild
-          - Boolean. True to set the `EnforceCodeStyleInBuild` csproj value to true, false to set it to false
+          - Boolean. Value to set the `EnforceCodeStyleInBuild` csproj value to
     - CSharpStyleOptions
+      - Optional
       - Options for any code styling updates that will be performed over C# code
       - Required Properties:
         - RunDotnetFormat
           - Boolean. True to run the `dotnet format` command
     - NugetAuditOptions
+      - Optional
       - Settings to use for configuring Nuget Audit settings in csproj files. You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
       - Required Properties:
         - NuGetAudit
@@ -97,6 +100,7 @@ This is a config file used by the app to determine what updates to run. It is co
         - AuditLevel
           - String. What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
     - NuGetUpdateOptions
+      - Optional
       - Settings to use for updating NuGet packages in csproj files
       - Required Properties:
         - UpdateTopLevelNugetsInCsProj
@@ -105,11 +109,15 @@ This is a config file used by the app to determine what updates to run. It is co
           - Boolean. True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
 - NpmOptions
   - Optional
-  - Options for updating Npm packages
-  - Required Properties:
-    - NpmBuildCommand
-      - NpmBuildCommand
-        - String. Npm command to \"compile\" the npm directory. Format of the command run is: `npm run {{NpmBuildCommand}}`
+  - Options for updating Npm packages. If this is not set, NPM packages will not be updated
+  - Properties:
+    - NpmCompileOptions
+      - Optional
+      - Options for compiling Npm packages after updates. Note if this is not set, but the parent NpmOptions is set, NPM Packages will be updated but not tested with a compile.
+      - Required Properties:
+        - NpmBuildCommand
+          - NpmBuildCommand
+            - String. Npm command to "compile" the npm directory. The CLI command that will be run is: `npm run {{NpmBuildCommand}}`
 
 
 ### Example Options File
@@ -151,14 +159,16 @@ This is a config file used by the app to determine what updates to run. It is co
     }
   },
   "NpmOptions": {
-    "NpmBuildCommand": "publish"
+    "NpmCompileOptions":{
+      "NpmBuildCommand": "publish"
+    }
   }
 }
 ```
-	 
+
 ## Ignore Patterns
 
-The Code Updater application has a default set of paths to ignore. The list is below. Note that all paths are in the list using both forwardslashes and backslashes. These are in addition to any skip paths passed in with the `IgnorePatterns` config file property. As of right now, there is no way to remove these.
+The Code Updater application has a default set of paths to ignore. The list is below. Note that all paths are in the list using both forwardslashes and backslashes. These are in addition to any skip paths passed in with the `IgnorePatterns` config file property. There is no way to remove these. Think of these like an ignore file, but no wildcard syntax. it's just basic string matching.
 
 Ignore all C# `obj` and `bin` folders:
 - /obj/Debug/
@@ -176,7 +186,7 @@ Ignore packages inside node_modules folder:
 
 ## Installing Locally vs Downloading the Code
 
-The tool can be very opinionated. When updating packages it will only update to the latest version. If the tool does some things you can't use for your projects, you can download the code, make changes, and keep that for yourself (OSS FTW). If this is something you have to do, feel free to file an issue in the repo and and we can discuss it.
+The tool can be very opinionated. For example, when updating packages it will only update to the latest version. If the tool does some things you can't use for your projects, you can download the code, make changes, and keep that for yourself (OSS FTW). If this is something you have to do, feel free to file an issue in the repo and and we can discuss it. Maybe a change you need can be incorporated into the project.
 
 ## Required 3rd Party Software
 

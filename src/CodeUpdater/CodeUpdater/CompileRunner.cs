@@ -16,19 +16,20 @@ public class CompileRunner(ILogger Logger, IRunProcessHelper RunProcessHelper)
     public async ValueTask<CompileResults> CompileProjectsAsync(UpdateWork updateWork, UpdateOptions updateOptions)
     {
         var csharpBuildResults = await CompileAllCSharpProjectsAsync(updateWork);
-
-        var npmBuildCommand = updateOptions.NpmOptions?.NpmBuildCommand;
-        var npmDirectoryBuildResults = new CompileNpmDirectoryResults(ImmutableArray<CompileNpmDirectoryResult>.Empty);
-        if (!string.IsNullOrWhiteSpace(npmBuildCommand))
-        {
-            npmDirectoryBuildResults = await BuildAllNpmDirectoriesAsync(updateWork, npmBuildCommand);
-        }
+        var npmDirectoryBuildResults = await BuildAllNpmDirectoriesAsync(updateWork, updateOptions);
 
         return new CompileResults(csharpBuildResults, npmDirectoryBuildResults);
     }
 
-    private async ValueTask<CompileNpmDirectoryResults> BuildAllNpmDirectoriesAsync(UpdateWork updateWork, string npmBuildCommand)
+    private async ValueTask<CompileNpmDirectoryResults> BuildAllNpmDirectoriesAsync(UpdateWork updateWork, UpdateOptions updateOptions)
     {
+        var npmBuildCommand = updateOptions.NpmOptions?.NpmCompileOptions?.NpmBuildCommand;
+        if (!string.IsNullOrWhiteSpace(npmBuildCommand))
+        {
+            Logger.Information("Np NpmOptions config set, meaning no NPM Packages Updated, meaning nothing to compile");
+            return new CompileNpmDirectoryResults(ImmutableArray<CompileNpmDirectoryResult>.Empty);
+        }
+
         if (!updateWork.NpmDirectories.Any())
         {
             Logger.Information($"No NPM directories to build");

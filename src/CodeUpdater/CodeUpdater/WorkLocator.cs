@@ -11,7 +11,7 @@ namespace ProgrammerAL.Tools.CodeUpdater;
 
 public record UpdateWork(ImmutableArray<string> CsProjectFiles, ImmutableArray<string> NpmDirectories);
 
-public class WorkLocator(ILogger Logger)
+public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
 {
     public ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
     {
@@ -67,6 +67,12 @@ public class WorkLocator(ILogger Logger)
 
     public ImmutableArray<string> FindNpmDirectories(string rootDirectory, ImmutableArray<string> skipPaths)
     {
+        if (UpdateOptions.NpmOptions is null)
+        {
+            Logger.Information("Np NpmOptions config set, will not attempt to update NPM Packages");
+            return ImmutableArray<string>.Empty;
+        }
+
         var allPackageJsonPaths = Directory.GetFiles(rootDirectory, "package.json", SearchOption.AllDirectories);
         var validPaths = new List<string>();
 

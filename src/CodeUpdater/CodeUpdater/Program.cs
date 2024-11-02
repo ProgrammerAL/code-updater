@@ -25,7 +25,7 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     var logger = SetupLogger(updateOptions);
 
     var runProcessHelper = new RunProcessHelper(logger);
-    var workLocator = new WorkLocator(logger);
+    var workLocator = new WorkLocator(logger, updateOptions);
     var validator = new PreRunValidator(logger, runProcessHelper);
     var cSharpUpdater = new CSharpUpdater(logger, runProcessHelper, updateOptions);
     var npmUpdater = new NpmUpdater(logger, runProcessHelper);

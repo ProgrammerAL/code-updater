@@ -6,7 +6,7 @@ namespace ProgrammerAL.Tools.CodeUpdater;
 public class UpdateOptions
 {
     /// <summary>
-    /// Options for path to use when updating code
+    /// This object determines what will be updated based on file paths
     /// </summary>
     [Required]
     public required UpdatePathOptions UpdatePathOptions { get; set; }
@@ -44,13 +44,20 @@ public class UpdatePathOptions
     /// </summary>
     [Required]
     public required IEnumerable<string> IgnorePatterns { get; set; }
-
 }
 
 public class NpmOptions
 {
     /// <summary>
-    /// Npm command to \"compile\" the npm directory. Format run is: npm run <NpmBuildCommand>.
+    /// Options for compiling Npm packages after updates. Note if this is not set, but the parent NpmOptions is set, NPM Packages will be updated but not tested with a compile.
+    /// </summary>
+    public NpmCompileOptions? NpmCompileOptions { get; set; }
+}
+
+public class NpmCompileOptions
+{
+    /// <summary>
+    /// Npm command to \"compile\" the npm directory. The CLI command that will be run is: npm run {{NpmBuildCommand}}
     /// </summary>
     [Required(AllowEmptyStrings = false)]
     public required string NpmBuildCommand { get; set; }
@@ -64,7 +71,7 @@ public class CSharpOptions
     public CsProjVersioningOptions? CsProjVersioningOptions { get; set; }
 
     /// <summary>
-    /// .NET Analyzer settings to set in all csproj files
+    /// .NET First Party Analyzer settings to set in all `*.csproj` files. You can read more at https://learn.microsoft.com/en-us/visualstudio/code-quality/install-net-analyzers?view=vs-2022
     /// </summary>
     public CsProjDotNetAnalyzerOptions? CsProjDotNetAnalyzerOptions { get; set; }
 
@@ -171,12 +178,10 @@ public class LoggingOptions
     /// <summary>
     /// If this is set, it will be the file to write logs to, in addition to the console
     /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string OutputFile { get; set; }
+    public string? OutputFile { get; set; }
 
     /// <summary>
     /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
     /// </summary>
-    [Required(AllowEmptyStrings = false)]
-    public required string LogLevel { get; set; } = "verbose";
+    public string LogLevel { get; set; } = "verbose";
 }
