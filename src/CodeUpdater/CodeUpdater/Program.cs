@@ -31,9 +31,9 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     var npmUpdater = new NpmUpdater(logger, runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
 
-    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.PathOptions.IgnorePatterns);
+    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.UpdatePathOptions.IgnorePatterns);
 
-    var updateWork = workLocator.DetermineUpdateWork(updateOptions.PathOptions.RootDirectory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(updateOptions.UpdatePathOptions.RootDirectory, skipPaths);
 
     var canRun = await validator.VerifyCanRunAsync(updateWork);
 
