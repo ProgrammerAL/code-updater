@@ -9,22 +9,117 @@ using Serilog;
 
 namespace ProgrammerAL.Tools.CodeUpdater;
 
-public record UpdateWork(ImmutableArray<string> CsProjectFiles, ImmutableArray<string> NpmDirectories);
+public record UpdateWork(ImmutableArray<string> ValidDirectories, ImmutableArray<string> CsProjectFiles, ImmutableArray<string> NpmDirectories);
 
 public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
 {
-    public ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
+    public UpdateWork DetermineUpdateWork(string rootDirectory)
+    {
+        var validDirectories = DetermineValidDirectories(rootDirectory);
+        var csProjFiles = FindCsProjFiles(validDirectories);
+        var npmDirectories = FindNpmDirectories(validDirectories);
+
+        return new UpdateWork(validDirectories, csProjFiles, npmDirectories);
+    }
+
+    private ImmutableArray<string> DetermineValidDirectories(string rootDirectory)
+    {
+        var skipPaths = DetermineSkipPaths(UpdateOptions.UpdatePathOptions.IgnorePatterns);
+
+        //Get all directories, including subdirectories
+        //  Make sure the directory path string includes a trailing slash so we can compare it to the skip paths
+        var allDirectories = Directory.GetDirectories(rootDirectory, "*", SearchOption.AllDirectories)
+                                       .Select(x => $"{x}{Path.DirectorySeparatorChar}");
+        var validDirectories = new List<string>();
+
+        foreach (var directoryPath in allDirectories)
+        {
+            var skipPath = skipPaths.FirstOrDefault(x => directoryPath.Contains(x, StringComparison.OrdinalIgnoreCase));
+            if (skipPath is object)
+            {
+                Logger.Debug($"Skipping directory '{directoryPath}' because it's path should be ignored by rule: {skipPath}");
+            }
+            else
+            {
+                validDirectories.Add(directoryPath);
+            }
+        }
+
+        return validDirectories.ToImmutableArray();
+    }
+
+    public ImmutableArray<string> FindCsProjFiles(ImmutableArray<string> validDirectories)
+    {
+        if (UpdateOptions.CSharpOptions is null)
+        {
+            Logger.Information("No CSharpOptions config set, will not attempt to update any C# code");
+            return ImmutableArray<string>.Empty;
+        }
+
+        var validCsProjFilesPaths = new List<string>();
+
+        foreach (var dir in validDirectories)
+        {
+            var allCsProjFilesPaths = Directory.GetFiles(dir, "*.csproj", SearchOption.TopDirectoryOnly);
+            validCsProjFilesPaths.AddRange(allCsProjFilesPaths);
+        }
+
+        return validCsProjFilesPaths.ToImmutableArray();
+    }
+
+    public ImmutableArray<string> FindNpmDirectories(ImmutableArray<string> validDirectories)
+    {
+        if (UpdateOptions.NpmOptions is null)
+        {
+            Logger.Information("No NpmOptions config set, will not attempt to update NPM Packages");
+            return ImmutableArray<string>.Empty;
+        }
+
+        var validPaths = new List<string>();
+
+        foreach (var dir in validDirectories)
+        {
+            var packageJsonFiles = Directory.GetFiles(dir, "package.json", SearchOption.TopDirectoryOnly);
+
+            var packageJsonFile = packageJsonFiles.FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(packageJsonFile))
+            {
+                Logger.Debug($"Skipping directory '{dir}' because it doesn't have a package.json file in it");
+                continue;
+            }
+
+            var packagePath = Path.GetDirectoryName(packageJsonFile);
+            if (string.IsNullOrWhiteSpace(packagePath))
+            {
+                Logger.Debug($"Skipping '{packageJsonFile}' file because it's package.json path is null or empty");
+                continue;
+            }
+
+            validPaths.Add(packagePath);
+        }
+
+        return validPaths.ToImmutableArray();
+    }
+
+    private ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
     {
         var skipPaths = new[]
         {
             //Ignore all obj and bin folders
+            @"/obj/",
             @"/obj/Debug/",
             @"/obj/Release/",
+            @"/bin/",
             @"/bin/Debug/",
             @"/bin/Release/",
 
             //Ignore packages inside node_modules
-            @"/node_modules/"
+            @"/node_modules/",
+
+            //Ignore the .git folder
+            @"/.git/",
+            @"/.vs/",
         }
         .ToImmutableArray();
 
@@ -34,68 +129,5 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
         skipPaths = skipPaths.AddRange(additionalSkipPaths);
 
         return skipPaths;
-    }
-
-    public UpdateWork DetermineUpdateWork(string rootDirectory, ImmutableArray<string> skipPaths)
-    {
-        var csProjFiles = FindCsProjFiles(rootDirectory, skipPaths);
-        var npmDirectories = FindNpmDirectories(rootDirectory, skipPaths);
-
-        return new UpdateWork(csProjFiles, npmDirectories);
-    }
-
-    public ImmutableArray<string> FindCsProjFiles(string rootDirectory, ImmutableArray<string> skipPaths)
-    {
-        var allCsProjFilesPaths = Directory.GetFiles(rootDirectory, "*.csproj", SearchOption.AllDirectories);
-        var validCsProjFilesPaths = new List<string>();
-
-        foreach (var csProjFilePath in allCsProjFilesPaths)
-        {
-            var skipPath = skipPaths.FirstOrDefault(x => csProjFilePath.Contains(x, StringComparison.OrdinalIgnoreCase));
-            if (skipPath is object)
-            {
-                Logger.Debug($"Skipping '{csProjFilePath}' file because it's path should be ignored by rule: {skipPath}");
-            }
-            else
-            {
-                validCsProjFilesPaths.Add(csProjFilePath);
-            }
-        }
-
-        return validCsProjFilesPaths.ToImmutableArray();
-    }
-
-    public ImmutableArray<string> FindNpmDirectories(string rootDirectory, ImmutableArray<string> skipPaths)
-    {
-        if (UpdateOptions.NpmOptions is null)
-        {
-            Logger.Information("No NpmOptions config set, will not attempt to update NPM Packages");
-            return ImmutableArray<string>.Empty;
-        }
-
-        var allPackageJsonPaths = Directory.GetFiles(rootDirectory, "package.json", SearchOption.AllDirectories);
-        var validPaths = new List<string>();
-
-        foreach (var packageJsonPath in allPackageJsonPaths)
-        {
-            var packagePath = Path.GetDirectoryName(packageJsonPath);
-            if (string.IsNullOrWhiteSpace(packagePath))
-            {
-                Logger.Debug($"Skipping '{packageJsonPath}' file because it's path is null or empty");
-                continue;
-            }
-
-            var skipPath = skipPaths.FirstOrDefault(x => packagePath.Contains(x, StringComparison.OrdinalIgnoreCase));
-            if (skipPath is object)
-            {
-                Logger.Debug($"Skipping '{packagePath}' because it's path should be ignored by rule: {skipPath}");
-            }
-            else
-            {
-                validPaths.Add(packagePath);
-            }
-        }
-
-        return validPaths.ToImmutableArray();
     }
 }

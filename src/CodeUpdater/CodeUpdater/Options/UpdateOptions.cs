@@ -22,6 +22,11 @@ public class UpdateOptions
     public NpmOptions? NpmOptions { get; set; }
 
     /// <summary>
+    /// Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, setting the correct version of .NET in a YAML file for a CI/CD Pipeline
+    /// </summary>
+    public RegexSearchOptions? RegexSearchOptions { get; set; }
+
+    /// <summary>
     /// Options for output logging of the operation
     /// </summary>
     public LoggingOptions? LoggingOptions { get; set; }
@@ -184,4 +189,28 @@ public class LoggingOptions
     /// Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.
     /// </summary>
     public string LogLevel { get; set; } = "verbose";
+}
+
+public class RegexSearchOptions
+{
+    /// <summary>
+    /// Collection of searches to make in all files that are not ignored
+    /// </summary>
+    [Required]
+    public required IEnumerable<StringSearch> Searches { get; set; }
+
+    public class StringSearch
+    {
+        /// <summary>
+        /// Regex to search for in all files that are not ignored
+        /// </summary>
+        [Required(AllowEmptyStrings = false)]
+        public required string SearchRegex { get; set; }
+
+        /// <summary>
+        /// Description to show in the output
+        /// </summary>
+        [Required(AllowEmptyStrings = false)]
+        public required string Description { get; set; }
+    }
 }

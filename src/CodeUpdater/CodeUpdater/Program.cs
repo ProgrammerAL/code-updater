@@ -30,10 +30,9 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
     var cSharpUpdater = new CSharpUpdater(logger, runProcessHelper, updateOptions);
     var npmUpdater = new NpmUpdater(logger, runProcessHelper);
     var compileRunner = new CompileRunner(logger, runProcessHelper);
+    var regexSearcher = new RegexSearcher(logger, updateOptions);
 
-    var skipPaths = workLocator.DetermineSkipPaths(updateOptions.UpdatePathOptions.IgnorePatterns);
-
-    var updateWork = workLocator.DetermineUpdateWork(updateOptions.UpdatePathOptions.RootDirectory, skipPaths);
+    var updateWork = workLocator.DetermineUpdateWork(updateOptions.UpdatePathOptions.RootDirectory);
 
     var canRun = await validator.VerifyCanRunAsync(updateWork);
 
@@ -45,13 +44,14 @@ static async ValueTask RunAsync(CommandOptions commandOptions)
 
     var csUpdates = await cSharpUpdater.UpdateAllCSharpProjectsAsync(updateWork);
     var npmUpdates = npmUpdater.UpdateNpmPackages(updateWork);
+    var searchResults = regexSearcher.SearchUpdatableFiles(updateWork);
 
     //After updating everything, compile all projects
     //  Don't do this in the above loop in case a project needs an update that would cause it to not compile
     //  So wait for all projects to be updated
     var compileResults = await compileRunner.CompileProjectsAsync(updateWork, updateOptions);
 
-    OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, logger);
+    OutputSummary(updateWork, csUpdates, npmUpdates, compileResults, searchResults, logger);
 }
 
 static ILogger SetupLogger(UpdateOptions updateOptions)
@@ -132,7 +132,7 @@ static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)
     return updateOptions;
 }
 
-static void OutputSummary(UpdateWork updateWork, ImmutableArray<CSharpUpdateResult> csUpdates, NpmUpdates npmUpdates, CompileResults compileResults, ILogger logger)
+static void OutputSummary(UpdateWork updateWork, ImmutableArray<CSharpUpdateResult> csUpdates, NpmUpdates npmUpdates, CompileResults compileResults, RegexSearchResults searchResults, ILogger logger)
 {
 #pragma warning disable IDE0058 // Expression value is never used
     var builder = new StringBuilder();
@@ -180,6 +180,29 @@ static void OutputSummary(UpdateWork updateWork, ImmutableArray<CSharpUpdateResu
     foreach (var npmCompileFailure in npmCompileFailures)
     {
         builder.AppendLine($"\t{npmCompileFailure.BuildResult}:{npmCompileFailure.Directory}");
+    }
+
+    builder.AppendLine();
+    builder.AppendLine("Regex Search Results:");
+    if (searchResults.Results.Any())
+    {
+        var groupedResults = searchResults.Results.GroupBy(x => x.Description);
+        foreach (var group in groupedResults)
+        {
+            builder.AppendLine($"\t{group.Key}:");
+            foreach (var regexSearchResult in group)
+            {
+                builder.AppendLine($"\t\t- {regexSearchResult.FilePath}");
+                foreach (var matchedString in regexSearchResult.MatchedStrings)
+                {
+                    builder.AppendLine($"\t\t\t- {matchedString}");
+                }
+            }
+        }
+    }
+    else
+    {
+        builder.AppendLine("\tNo search results");
     }
 
     logger.Information(builder.ToString());

@@ -30,6 +30,9 @@ public record CompileCsProjResult(string CsProjFile, CompileResultType BuildResu
 public record CompileNpmDirectoryResults(ImmutableArray<CompileNpmDirectoryResult> Results);
 public record CompileNpmDirectoryResult(string Directory, CompileResultType BuildResult);
 
+public record RegexSearchResults(ImmutableArray<RegexSearchResult> Results);
+public record RegexSearchResult(string Description, string FilePath, ImmutableArray<string> MatchedStrings);
+
 public enum CompileResultType
 {
     Success,

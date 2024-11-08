@@ -118,14 +118,26 @@ This is a config file used by the app to determine what updates to run. It is co
         - NpmBuildCommand
           - NpmBuildCommand
             - String. Npm command to "compile" the npm directory. The CLI command that will be run is: `npm run {{NpmBuildCommand}}`
+- RegexSearchOptions
+  - Optional
+  - Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, setting the correct version of .NET in a YAML file for a CI/CD Pipeline
+  - Required Properties:
+    - Searches:
+      - Collection of searches to make in all files that are not ignored
+        - Object Required Properties:
+          - Search Regex:
+            - String. Regex to search for in all files that are not ignored.
+          - Description:
+            - String. Description to show in the output.
 
 
 ### Example Options File
 
 ```json
 {
+{
   "UpdatePathOptions": {
-    "RootDirectory": "C:/my-repos/my-app-1",
+    "RootDirectory": "D:\\GitHub\\ProgrammerAL\\ProgrammerAlSite",
     "IgnorePatterns": [
       "/samples/",
       "\\samples\\"
@@ -159,9 +171,15 @@ This is a config file used by the app to determine what updates to run. It is co
     }
   },
   "NpmOptions": {
-    "NpmCompileOptions":{
-      "BuildCommand": "publish"
-    }
+    "NpmBuildCommand": "publish"
+  },
+  "RegexSearchOptions": {
+    "Searches": [
+      {
+        "SearchRegex": "[0-9]{1,2}\\..+\\.x",
+        "Description": "YAML Dotnet Version"
+      }
+    ]
   }
 }
 ```

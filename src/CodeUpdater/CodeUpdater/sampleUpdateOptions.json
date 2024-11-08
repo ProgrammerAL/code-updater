@@ -1,6 +1,6 @@
 {
   "UpdatePathOptions": {
-    "RootDirectory": "C:/my-repos/my-app-1",
+    "RootDirectory": "D:\\GitHub\\ProgrammerAL\\ProgrammerAlSite",
     "IgnorePatterns": [
       "/samples/",
       "\\samples\\"
@@ -35,5 +35,13 @@
   },
   "NpmOptions": {
     "NpmBuildCommand": "publish"
+  },
+  "RegexSearchOptions": {
+    "Searches": [
+      {
+        "SearchRegex": "[0-9]{1,2}\\..+\\.x",
+        "Description": "YAML Dotnet Version"
+      }
+    ]
   }
 }
