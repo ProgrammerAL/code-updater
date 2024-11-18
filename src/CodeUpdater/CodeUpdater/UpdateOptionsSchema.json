@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://programmerAL.com/code-updater.schema.json",
+  "title": "Update Options",
+  "description": "Settings to use when updating code",
+  "type": "object",
+  "properties": {
+    "updatePathOptions": {
+      "type": "object",
+      "properties": {
+        "rootDirectory": {
+          "description": "Root directory to run from. Code Updater will search all child directories within this for projects to update.",
+          "type": "string"
+        },
+        "ignorePatterns": {
+          "description": "String to ignore within file paths when looking for projects to update. This is OS sensitive, so use \\ as the path separator for Windows, and / as the path separator everywhere else. Eg: `\\my-skip-path\\` will ignore all projects that have the text `\\my-skip-path\\` within the full path. Which will only happen on Windows because that uses backslashes for path separators.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [ "rootDirectory", "ignorePatterns" ]
+    },
+    "cSharpOptions": {
+      "type": "object",
+      "properties": {
+        "csProjVersioningOptions": {
+          "type": "object",
+          "properties": {
+            "targetFramework": {
+              "description": "Target framework for the project",
+              "type": "string"
+            },
+            "langVersion": {
+              "description": "Language version for the project",
+              "type": "string"
+            },
+            "treatWarningsAsErrors": {
+              "description": "Treat warnings as errors",
+              "type": "boolean"
+            }
+          },
+          "required": [ "targetFramework", "langVersion", "treatWarningsAsErrors" ]
+        },
+        "csProjDotNetAnalyzerOptions": {
+          "type": "object",
+          "properties": {
+            "enableNetAnalyzers": {
+              "description": "True to set the `EnableNetAnalyzers` csproj value to true, false to set it to false",
+              "type": "boolean"
+            },
+            "enforceCodeStyleInBuild": {
+              "description": "True to set the `EnforceCodeStyleInBuild` csproj value to true, false to set it to false",
+              "type": "boolean"
+            }
+          },
+          "required": [ "enableNetAnalyzers", "enforceCodeStyleInBuild" ]
+        },
+        "cSharpStyleOptions": {
+          "type": "object",
+          "properties": {
+            "runDotnetFormat": {
+              "description": "True to run the `dotnet format` command",
+              "type": "boolean"
+            }
+          },
+          "required": [ "runDotnetFormat" ]
+        },
+        "nugetAuditOptions": {
+          "type": "object",
+          "properties": {
+            "nuGetAudit": {
+              "description": "What value to set for the `NuGetAudit` property in the csproj file.",
+              "type": "boolean"
+            },
+            "auditMode": {
+              "description": "What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.",
+              "type": "string"
+            },
+            "auditLevel": {
+              "description": "What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`",
+              "type": "string"
+            }
+          },
+          "required": [ "nuGetAudit", "auditMode", "auditLevel" ]
+        },
+        "nuGetUpdateOptions": {
+          "type": "object",
+          "properties": {
+            "updateTopLevelNugetsInCsProj": {
+              "description": "True to updates all referenced nugets to the latest version. These are the references in the csproj files.",
+              "type": "boolean"
+            },
+            "updateTopLevelNugetsNotInCsProj": {
+              "description": "True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.",
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "npmOptions": {
+      "type": "object",
+      "description": "Options for compiling Npm packages after updates. Note if this is not set, but the parent NpmOptions is set, NPM Packages will be updated but not tested with a compile.",
+      "properties": {
+        "npmCompileOptions": {
+          "type": "object",
+          "properties": {
+            "npmBuildCommand": {
+              "description": "Npm command to \"compile\" the npm directory. The CLI command that will be run is: npm run {{NpmBuildCommand}}",
+              "type": "string"
+            },
+            "required": [ "npmBuildCommand" ]
+          }
+        }
+      }
+    },
+    "regexSearchOptions": {
+      "type": "object",
+      "description": "Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, setting the correct version of .NET in a YAML file for a CI/CD Pipeline",
+      "properties": {
+        "searches": {
+          "type": "array",
+          "description": "Collection of searches to make in all files that are not ignored",
+          "items": {
+            "type": "object",
+            "properties": {
+              "searchRegex": {
+                "description": "Regex to search for in all files that are not ignored",
+                "type": "string"
+              },
+              "description": {
+                "description": "Description to show in the output",
+                "type": "string"
+              }
+            },
+            "required": [ "searchRegex", "description" ]
+          }
+        }
+      }
+    },
+    "loggingOptions": {
+      "type": "object",
+      "description": "Options for output logging of the operation",
+      "properties": {
+        "outputFile": {
+          "description": "If this is set, it will be the file to write logs to, in addition to the console",
+          "type": "string"
+        },
+        "logLevel": {
+          "description": "Verbosity level to log. Valid values are: Verbose, Info, Warn, Error. Default value: verbose.",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [ "updatePathOptions" ]
+}
