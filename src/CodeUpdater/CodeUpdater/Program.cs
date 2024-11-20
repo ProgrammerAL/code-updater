@@ -89,6 +89,12 @@ static ILogger SetupLogger(UpdateOptions updateOptions)
 
 static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)
 {
+    var jsonSerializationOptions = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true,
+        AllowTrailingCommas = true,
+    };
+
     if (!File.Exists(configFilePath))
     {
         throw new Exception($"Config file does not exist at path: {configFilePath}");
@@ -100,11 +106,7 @@ static async Task<UpdateOptions> LoadUpdateOptionsAsync(string configFilePath)
         throw new Exception($"Config file is empty at path: {configFilePath}");
     }
 
-    var updateOptions = JsonSerializer.Deserialize<UpdateOptions>(updateOptionJson, new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true,
-        AllowTrailingCommas = true,
-    });
+    var updateOptions = JsonSerializer.Deserialize<UpdateOptions>(updateOptionJson, jsonSerializationOptions);
 
     if (updateOptions is null)
     {

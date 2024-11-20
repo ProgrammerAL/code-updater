@@ -22,7 +22,7 @@ public class UpdateOptions
     public NpmOptions? NpmOptions { get; set; }
 
     /// <summary>
-    /// Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, setting the correct version of .NET in a YAML file for a CI/CD Pipeline
+    /// Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, use this to search for the hard coded .NET version in a YAML file for a CI/CD Pipeline so you know where to manually update it
     /// </summary>
     public RegexSearchOptions? RegexSearchOptions { get; set; }
 
@@ -56,7 +56,7 @@ public class NpmOptions
     /// <summary>
     /// Options for compiling Npm packages after updates. Note if this is not set, but the parent NpmOptions is set, NPM Packages will be updated but not tested with a compile.
     /// </summary>
-    public NpmCompileOptions? NpmCompileOptions { get; set; }
+    public NpmCompileOptions? CompileOptions { get; set; }
 }
 
 public class NpmCompileOptions
@@ -86,15 +86,9 @@ public class CSharpOptions
     public CSharpStyleOptions? CSharpStyleOptions { get; set; }
 
     /// <summary>
-    /// Settings to use for configuring Nuget Audit settings in csproj files.
-    /// You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+    /// Options for updating Nuget packages in csproj files
     /// </summary>
-    public NugetAuditOptions? NugetAuditOptions { get; set; }
-
-    /// <summary>
-    /// Settings to use for updating NuGet packages in csproj files
-    /// </summary>
-    public NuGetUpdateOptions? NuGetUpdateOptions { get; set; }
+    public NugetOptions? NugetOptions { get; set; }
 }
 
 public class CsProjVersioningOptions
@@ -140,6 +134,20 @@ public class CSharpStyleOptions
     /// </summary>
     [Required]
     public required bool RunDotnetFormat { get; set; }
+}
+
+public class NugetOptions
+{
+    /// <summary>
+    /// Settings to use for configuring Nuget Audit settings in csproj files.
+    /// You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+    /// </summary>
+    public NugetAuditOptions? AuditOptions { get; set; }
+
+    /// <summary>
+    /// Settings to use for updating NuGet packages in csproj files
+    /// </summary>
+    public NuGetUpdateOptions? UpdateOptions { get; set; }
 }
 
 public class NugetAuditOptions

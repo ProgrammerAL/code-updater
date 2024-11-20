@@ -61,13 +61,13 @@ public class CSharpUpdater
     {
         try
         {
-            if (cSharpOptions.NuGetUpdateOptions is null)
+            if (cSharpOptions.NugetOptions?.UpdateOptions is null)
             {
                 _logger.Information("No NuGet options provided, skipping NuGet updates");
                 return new NugetUpdateResults(RetrievedPackageListSuccessfully: true, ImmutableArray<NugetUpdateResult>.Empty);
             }
 
-            return await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath, cSharpOptions.NuGetUpdateOptions);
+            return await _nugetUpdater.UpdateNugetPackagesAsync(csProjFilePath, cSharpOptions.NugetOptions.UpdateOptions);
         }
         catch (Exception ex)
         {

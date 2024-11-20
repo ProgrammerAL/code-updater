@@ -61,9 +61,9 @@ public class CsProjUpdater(ILogger Logger)
             }
         }
 
-        if (cSharpOptions.NugetAuditOptions is object)
+        if (cSharpOptions.NugetOptions?.AuditOptions is object)
         {
-            var nugetAuditUpdates = GenerateUpdateGroupForNugetAudit(cSharpOptions.NugetAuditOptions);
+            var nugetAuditUpdates = GenerateUpdateGroupForNugetAudit(cSharpOptions.NugetOptions.AuditOptions);
 
             if (nugetAuditUpdates.Any())
             {

@@ -6,13 +6,14 @@ It would be great to get this to work for all kinds of languages/frameworks some
 
 ## What Updates Can Be Done
 
-- Update .NET `*.csproj` files to use a specified C# Language Version
-- Update .NET `*.csproj` files to use a specified .NET SDK Version (AKA TargetFramework element)
+- Update `*.csproj` files to use a specified C# Language Version
+- Update `*.csproj` files to use a specified .NET SDK Version (AKA TargetFramework element)
 - Enable/Disable .NET Analyzers in all `*.csproj` files
 - Run `dotnet format` command on all `*.csproj` files
 - Update all NuGet packages in all *`.csproj` files to the latest version
 - Add Nuget auditing properties to all `*.csproj` files 
-- Update all NPM packages in all package.json files to the latest version
+- Update all NPM packages in all `package.json` files to the latest version
+- Search all included files for a regex pattern
 
 ## How to Use It
 
@@ -38,9 +39,11 @@ Remember, the purpose of this is to update code and dependencies. It is assumed,
 - `-h|--help`
   - Outputs CLI help
 
-## Options File
+## Update Options File
 
-This is a config file used by the app to determine what updates to run. It is composed of different objects which enable certain update features. Setting an object means that feature will run. Omitting it from the file will disable that update feature. 
+This is a config file used by the app to determine what updates to run. It is composed of different objects which enable certain update features. Setting an object means that feature will run. Omitting it from the file will disable that update feature.
+
+Below is a list of the required and optional propeties for the Update Options JSON. There is also a JSON Schema for this file at the root of this repository titled `UpdateOptionsSchema.json` which you can use to validate before running, if it helps.
 
 - UpdatePathOptions
   - Required
@@ -89,24 +92,28 @@ This is a config file used by the app to determine what updates to run. It is co
       - Required Properties:
         - RunDotnetFormat
           - Boolean. True to run the `dotnet format` command
-    - NugetAuditOptions
+    - NugetOptions
       - Optional
-      - Settings to use for configuring Nuget Audit settings in csproj files. You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
-      - Required Properties:
-        - NuGetAudit
-          - Boolean. What value to set for the `NuGetAudit` property in the csproj file.
-        - AuditMode
-          - String. What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.
-        - AuditLevel
-          - String. What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
-    - NuGetUpdateOptions
-      - Optional
-      - Settings to use for updating NuGet packages in csproj files
-      - Required Properties:
-        - UpdateTopLevelNugetsInCsProj
-          - Boolean. True to updates all referenced nugets to the latest version. These are the references in the csproj files.
-        - UpdateTopLevelNugetsNotInCsProj
-          - Boolean. True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
+      - Options for updating Nuget packages in csproj files
+      - Properties:
+        - AuditOptions
+          - Optional
+          - Settings to use for configuring Nuget Audit settings in csproj files. You can read more at https://learn.microsoft.com/en-us/nuget/concepts/auditing-packages#configuring-nuget-audit
+          - Required Properties:
+            - NuGetAudit
+              - Boolean. What value to set for the `NuGetAudit` property in the csproj file.
+            - AuditMode
+              - String. What value to set for the `NuGetAuditMode` property in the csproj file. Valid values are `direct` and `all`.
+            - AuditLevel
+              - String. What value to set for the `NuGetAuditLevel` property in the csproj file. Valid values are: `low`, `moderate`, `high`, and `critical`
+        - UpdateOptions
+          - Optional
+          - Settings to use for updating NuGet packages in csproj files
+          - Required Properties:
+            - UpdateTopLevelNugetsInCsProj
+              - Boolean. True to updates all referenced nugets to the latest version. These are the references in the csproj files.
+            - UpdateTopLevelNugetsNotInCsProj
+              - Boolean. True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
 - NpmOptions
   - Optional
   - Options for updating Npm packages. If this is not set, NPM packages will not be updated
@@ -120,7 +127,7 @@ This is a config file used by the app to determine what updates to run. It is co
             - String. Npm command to "compile" the npm directory. The CLI command that will be run is: `npm run {{NpmBuildCommand}}`
 - RegexSearchOptions
   - Optional
-  - Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, setting the correct version of .NET in a YAML file for a CI/CD Pipeline
+  - Regex to search for specific string. Handy for finding things you need to manually update, that this tool can't easily do. For example, use this to search for the hard coded .NET version in a YAML file for a CI/CD Pipeline so you know where to manually update it
   - Required Properties:
     - Searches:
       - Collection of searches to make in all files that are not ignored
@@ -135,49 +142,52 @@ This is a config file used by the app to determine what updates to run. It is co
 
 ```json
 {
-{
-  "UpdatePathOptions": {
-    "RootDirectory": "D:\\GitHub\\ProgrammerAL\\ProgrammerAlSite",
-    "IgnorePatterns": [
+  "updatePathOptions": {
+    "rootDirectory": "./",
+    "ignorePatterns": [
       "/samples/",
       "\\samples\\"
     ]
   },
-  "LoggingOptions": {
-    "LogLevel": "Verbose",
-    "OutputFile": "./code-updater-output.txt"
+  "loggingOptions": {
+    "logLevel": "Verbose",
+    "outputFile": "./code-updater-output.txt"
   },
-  "CSharpOptions": {
-    "CsProjVersioningOptions": {
-      "TreatWarningsAsErrors": true,
-      "TargetFramework": "net8.0",
-      "LangVersion": "latest"
+  "cSharpOptions": {
+    "csProjVersioningOptions": {
+      "treatWarningsAsErrors": true,
+      "targetFramework": "net8.0",
+      "langVersion": "latest"
     },
-    "CsProjDotNetAnalyzerOptions": {
-      "EnableNetAnalyzers": true,
-      "EnforceCodeStyleInBuild": true
+    "csProjDotNetAnalyzerOptions": {
+      "enableNetAnalyzers": true,
+      "enforceCodeStyleInBuild": true
     },
-    "CSharpStyleOptions": {
-      "RunDotnetFormat": true
+    "cSharpStyleOptions": {
+      "runDotnetFormat": true
     },
-    "NugetAuditOptions": {
-      "NuGetAudit": true,
-      "AuditMode": "all",
-      "AuditLevel": "low"
-    },
-    "NuGetUpdateOptions": {
-      "UpdateTopLevelNugetsInCsProj": true,
-      "UpdateTopLevelNugetsNotInCsProj": true
+    "nugetOptions": {
+      "auditOptions": {
+        "nuGetAudit": true,
+        "auditMode": "all",
+        "auditLevel": "low"
+      },
+      "updateOptions": {
+        "updateTopLevelNugetsInCsProj": true,
+        "updateTopLevelNugetsNotInCsProj": true
+      }
     }
   },
-  "NpmOptions": {
-    "NpmBuildCommand": "publish"
+  "npmOptions": {
+    "compileOptions": {
+      "buildCommand": "publish"
+    }
   },
-  "RegexSearchOptions": {
-    "Searches": [
+  "regexSearchOptions": {
+    "searches": [
       {
-        "SearchRegex": "[0-9]{1,2}\\..+\\.x",
-        "Description": "YAML Dotnet Version"
+        "searchRegex": "[0-9]{1,2}\\..+\\.x",
+        "description": "YAML Dotnet Version"
       }
     ]
   }

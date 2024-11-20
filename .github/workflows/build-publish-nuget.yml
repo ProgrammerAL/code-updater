@@ -19,7 +19,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DOTNET_VERSION: 8.0.x
+      DOTNET_VERSION: 9.0.x
       SRC_DIRECTORY_PATH_LIB: ${{ github.workspace }}/src
       PROJECT_NAME_LIB: PublicInterfaceGenerator
       NUGET_VERSION: ${{ github.event.inputs.nuget_version_override || '1.0.0-preview' }}.${{ github.run_number }}

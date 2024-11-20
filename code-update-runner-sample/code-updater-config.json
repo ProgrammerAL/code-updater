@@ -1,41 +1,51 @@
 {
-  "UpdatePathOptions": {
-    "RootDirectory": "../",
-    "IgnorePatterns": [
+  "updatePathOptions": {
+    "rootDirectory": "./",
+    "ignorePatterns": [
       "/samples/",
       "\\samples\\"
     ]
   },
-  "LoggingOptions": {
-    "LogLevel": "Verbose",
-    "OutputFile": "./code-updater-output.txt"
+  "loggingOptions": {
+    "logLevel": "Verbose",
+    "outputFile": "./code-updater-output.txt"
   },
-  "CSharpOptions": {
-    "CsProjVersioningOptions": {
-      "TreatWarningsAsErrors": true,
-      "TargetFramework": "net8.0",
-      "LangVersion": "latest"
+  "cSharpOptions": {
+    "csProjVersioningOptions": {
+      "treatWarningsAsErrors": true,
+      "targetFramework": "net8.0",
+      "langVersion": "latest"
     },
-    "CsProjDotNetAnalyzerOptions": {
-      "EnableNetAnalyzers": true,
-      "EnforceCodeStyleInBuild": true
+    "csProjDotNetAnalyzerOptions": {
+      "enableNetAnalyzers": true,
+      "enforceCodeStyleInBuild": true
     },
-    "CSharpStyleOptions": {
-      "RunDotnetFormat": false
+    "cSharpStyleOptions": {
+      "runDotnetFormat": true
     },
-    "NugetAuditOptions": {
-      "NuGetAudit": true,
-      "AuditMode": "all",
-      "AuditLevel": "low"
-    },
-    "NuGetUpdateOptions": {
-      "UpdateTopLevelNugetsInCsProj": true,
-      "UpdateTopLevelNugetsNotInCsProj": false
+    "nugetOptions": {
+      "auditOptions": {
+        "nuGetAudit": true,
+        "auditMode": "all",
+        "auditLevel": "low"
+      },
+      "updateOptions": {
+        "updateTopLevelNugetsInCsProj": true,
+        "updateTopLevelNugetsNotInCsProj": true
+      }
     }
   },
-  "NpmOptions": {
-    "NpmCompileOptions":{
-      "BuildCommand": "publish"
+  "npmOptions": {
+    "compileOptions": {
+      "buildCommand": "publish"
     }
+  },
+  "regexSearchOptions": {
+    "searches": [
+      {
+        "searchRegex": "[0-9]{1,2}\\..+\\.x",
+        "description": "YAML Dotnet Version"
+      }
+    ]
   }
 }
