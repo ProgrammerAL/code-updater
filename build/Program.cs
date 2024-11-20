@@ -11,6 +11,9 @@ using System.Threading;
 using System.Diagnostics;
 using Cake.Common.Tools.DotNet.Test;
 using Cake.Common.Tools.DotNet.Build;
+using System.IO;
+using System.Xml.Linq;
+using System.Linq;
 
 public static class Program
 {
@@ -41,7 +44,7 @@ public class BuildContext : FrostingContext
         NugetVersion = LoadParameter(context, "nugetVersion");
         NuGetPushToken = LoadParameter(context, "nuGetPushToken");
         PushNuget = context.Argument<bool>("pushNuget", false);
-        
+
         ProjectPaths = ProjectPaths.LoadFromContext(context, BuildConfiguration, SrcDirectoryPath, NugetVersion);
     }
 
@@ -64,6 +67,29 @@ public sealed class OutputParametersTask : FrostingTask<BuildContext>
 }
 
 [IsDependentOn(typeof(OutputParametersTask))]
+[TaskName(nameof(UpdateCsProjVersionTask))]
+public sealed class UpdateCsProjVersionTask : FrostingTask<BuildContext>
+{
+    public override void Run(BuildContext context)
+    {
+        var filePath = context.ProjectPaths.CsprojFile;
+        var xml = XElement.Load(filePath);
+        var versionElements = xml
+            .Elements("PropertyGroup")
+            .SelectMany(x => x.Elements())
+            .Where(x => string.Equals(x.Name.LocalName, "Version", StringComparison.OrdinalIgnoreCase));
+        foreach (var versionElement in versionElements)
+        {
+            versionElement.Value = context.NugetVersion;
+        }
+
+        var csprojString = xml.ToString();
+        context.Log.Information($"Writing csproj file to '{filePath}' with content: {Environment.NewLine}{csprojString}");
+        File.WriteAllText(filePath, csprojString);
+    }
+}
+
+[IsDependentOn(typeof(UpdateCsProjVersionTask))]
 [TaskName(nameof(BuildTask))]
 public sealed class BuildTask : FrostingTask<BuildContext>
 {
@@ -127,7 +153,7 @@ public sealed class NugetPushTask : FrostingTask<BuildContext>
         }
 
         context.DotNetNuGetPush(context.ProjectPaths.NuGetFilePath, new Cake.Common.Tools.DotNet.NuGet.Push.DotNetNuGetPushSettings
-        { 
+        {
             Source = "https://api.nuget.org/v3/index.json",
             ApiKey = context.NuGetPushToken
         });
