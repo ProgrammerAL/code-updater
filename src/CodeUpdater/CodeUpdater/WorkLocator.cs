@@ -28,8 +28,9 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
 
         //Get all directories, including subdirectories
         //  Make sure the directory path string includes a trailing slash so we can compare it to the skip paths
+        //  Replace backslashes with forward slashes so we can compare them to the skip paths
         var allDirectories = Directory.GetDirectories(rootDirectory, "*", SearchOption.AllDirectories)
-                                       .Select(x => $"{x}{Path.DirectorySeparatorChar}");
+                                       .Select(x => $"{x}/".Replace('\\', '/'));
         var validDirectories = new List<string>();
 
         foreach (var directoryPath in allDirectories)
@@ -104,6 +105,7 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
 
     private ImmutableArray<string> DetermineSkipPaths(IEnumerable<string> additionalSkipPaths)
     {
+        //Only use forward slashes for paths, even on Windows. They work everywhere, even on Windows.
         var skipPaths = new[]
         {
             //Ignore all obj and bin folders
@@ -117,16 +119,14 @@ public class WorkLocator(ILogger Logger, UpdateOptions UpdateOptions)
             //Ignore packages inside node_modules
             @"/node_modules/",
 
-            //Ignore the .git folder
+            //Ignore some other app specific folders
             @"/.git/",
             @"/.vs/",
         }
         .ToImmutableArray();
 
-        //Include the same paths, but with backslashes so this is cross-platform
-        skipPaths = skipPaths.AddRange(skipPaths.Select(x => x.Replace("/", "\\")));
-
-        skipPaths = skipPaths.AddRange(additionalSkipPaths);
+        var normalizedAdditionalPaths = additionalSkipPaths.Select(x => x.Replace('\\', '/'));
+        skipPaths = skipPaths.AddRange(normalizedAdditionalPaths);
 
         return skipPaths;
     }

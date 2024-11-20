@@ -145,8 +145,7 @@ Below is a list of the required and optional propeties for the Update Options JS
   "updatePathOptions": {
     "rootDirectory": "./",
     "ignorePatterns": [
-      "/samples/",
-      "\\samples\\"
+      "/samples/"
     ]
   },
   "loggingOptions": {
@@ -196,21 +195,20 @@ Below is a list of the required and optional propeties for the Update Options JS
 
 ## Ignore Patterns
 
-The Code Updater application has a default set of paths to ignore. The list is below. Note that all paths are in the list using both forwardslashes and backslashes. These are in addition to any skip paths passed in with the `IgnorePatterns` config file property. There is no way to remove these. Think of these like an ignore file, but no wildcard syntax. it's just basic string matching.
+The Code Updater application has a default set of paths to ignore. The list is below. Note that all paths are in the list using forwardslashes, which work on all platforms (Windows/Mac/Linux). These are in addition to any skip paths passed in with the `IgnorePatterns` config file property. There is no way to remove these. Think of these like an ignore file, but no wildcard syntax. It's just basic string matching.
 
 Ignore all C# `obj` and `bin` folders:
 - /obj/Debug/
 - /obj/Release/
 - /bin/Debug/
 - /bin/Release/
-- \obj\Debug\
-- \obj\Release\
-- \bin\Debug\
-- \bin\Release\
 
 Ignore packages inside node_modules folder:
 - /node_modules/
-- \node_modules\
+
+Ignore some other app specific folders
+- /.git/
+- /.vs/
 
 ## Installing Locally vs Downloading the Code
 
