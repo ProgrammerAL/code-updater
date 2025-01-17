@@ -54,21 +54,29 @@ public class PreRunValidator(ILogger Logger, IRunProcessHelper RunProcessHelper)
             return false;
         }
 
-        using var jsonDoc = JsonDocument.Parse(commandResult.Output);
-
-        if (!jsonDoc.RootElement.TryGetProperty("dependencies", out var dependenciesElement))
+        try
         {
-            Logger.Error($"`npm list` command is missing the `dependencies` element. Cannot verify the `npm-check-updates` package is installed");
+            using var jsonDoc = JsonDocument.Parse(commandResult.Output);
+
+            if (!jsonDoc.RootElement.TryGetProperty("dependencies", out var dependenciesElement))
+            {
+                Logger.Error($"`npm list` command is missing the `dependencies` element. Cannot verify the `npm-check-updates` package is installed");
+                return false;
+            }
+
+            if (!dependenciesElement.TryGetProperty("npm-check-updates", out var npmCheckUpdatesElement))
+            {
+                Logger.Error($"`npm list` command is missing the `npm-check-updates` element, meaning that package is not installed. Before continuing, install that package by running `npm install -g npm-check-updates`.");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"`npm list` command failed. Cannot verify the `npm-check-updates` package is installed. Error is: {ex.ToString()}");
             return false;
         }
-
-        if (!dependenciesElement.TryGetProperty("npm-check-updates", out var npmCheckUpdatesElement))
-        {
-            Logger.Error($"`npm list` command is missing the `npm-check-updates` element, meaning that package is not installed. Before continuing, install that package by running `npm install -g npm-check-updates`.");
-            return false;
-        }
-
-        return true;
     }
 
     public class NpmPackagesListDto
