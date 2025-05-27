@@ -114,6 +114,8 @@ Below is a list of the required and optional propeties for the Update Options JS
               - Boolean. True to updates all referenced nugets to the latest version. These are the references in the csproj files.
             - UpdateTopLevelNugetsNotInCsProj
               - Boolean. True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.
+            - PackagesToSkip
+              - Names of NuGet packages to skip when upgrading. They will not be upgraded.
 - NpmOptions
   - Optional
   - Options for updating Npm packages. If this is not set, NPM packages will not be updated

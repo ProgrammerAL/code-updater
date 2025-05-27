@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 
 namespace ProgrammerAL.Tools.CodeUpdater;
@@ -184,6 +185,12 @@ public class NuGetUpdateOptions
     /// </summary>
     [Required]
     public bool UpdateTopLevelNugetsNotInCsProj { get; set; }
+
+    /// <summary>
+    /// Names of NuGet packages to skip when upgrading. They will not be upgraded
+    /// </summary>
+    [Required]
+    public ImmutableArray<string> PackagesToSkip { get; set; } = [];
 }
 
 public class LoggingOptions

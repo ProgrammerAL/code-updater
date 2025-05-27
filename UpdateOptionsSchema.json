@@ -95,6 +95,10 @@
             "updateTopLevelNugetsNotInCsProj": {
               "description": "True to updates all indirect nugets to the latest version. These are the nugets that are referenced automatically based on SDK chosen or something like that.",
               "type": "boolean"
+            },
+            "packagesToSkip": {
+              "description": "Names of NuGet packages to skip when upgrading. They will not be upgraded",
+              "type": "array"
             }
           }
         }

@@ -31,7 +31,8 @@
       },
       "updateOptions": {
         "updateTopLevelNugetsInCsProj": true,
-        "updateTopLevelNugetsNotInCsProj": true
+        "updateTopLevelNugetsNotInCsProj": true,
+        "packagesToSkip": [ "Serilog" ]
       }
     }
   },

@@ -33,6 +33,7 @@ public class NugetUpdater(ILogger Logger, IRunProcessHelper RunProcessHelper)
             ?.SelectMany(x => x?.TopLevelPackages ?? [])
             .Where(x => x is object && !string.IsNullOrWhiteSpace(x.Id))
             .Select(x => new NugetPackageToUpdate(Id: x!.Id!))
+            .Where(x => nuGetUpdates.PackagesToSkip.All(toSkip => !string.Equals(x.Id, toSkip, StringComparison.OrdinalIgnoreCase)))
             .ToImmutableArray() ?? [];
 
         var topLevelPackagesInCsProj = packages.Where(x => csProjText.Contains($"Include=\"{x.Id}\"", StringComparison.OrdinalIgnoreCase))
