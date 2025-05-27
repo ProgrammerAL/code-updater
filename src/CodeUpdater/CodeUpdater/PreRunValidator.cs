@@ -60,7 +60,7 @@ public class PreRunValidator(ILogger Logger, IRunProcessHelper RunProcessHelper)
 
             if (!jsonDoc.RootElement.TryGetProperty("dependencies", out var dependenciesElement))
             {
-                Logger.Error($"`npm list` command is missing the `dependencies` element. Cannot verify the `npm-check-updates` package is installed");
+                Logger.Error($"`npm list` command is missing the `dependencies` element. Cannot verify the `npm-check-updates` package is installed. You may need to manually install `npm-check-updates` by running the command `npm install -g npm-check-updates`");
                 return false;
             }
 
