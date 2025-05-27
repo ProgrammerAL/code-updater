@@ -21,9 +21,6 @@ await Parser.Default.ParseArguments<CommandOptions>(args)
 
 static async ValueTask RunAsync(CommandOptions commandOptions)
 {
-    var runDir = "D:\\GitHub\\Purple-Spike\\arcade-machine-local-services";
-    Directory.SetCurrentDirectory(runDir);
-
     var updateOptions = await LoadUpdateOptionsAsync(commandOptions.OptionsFile);
     var logger = SetupLogger(updateOptions);
 
